@@ -16,14 +16,12 @@ pairName => {
 }
 
 # allPairs
-chunkIndex => [pairName]  // Up to CHUNK_SIZE
+chunkIndex => [pairName]
 
 */
 
-const CHUNK_SIZE = 500;
 const MINIMUM_LIQUIDITY = 1000;
 const UNIT_LIQUIDITY = 1;
-
 
 var Swap = function () {
 
