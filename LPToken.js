@@ -28,7 +28,7 @@ Allowed.prototype = {
     }
 }
 
-var StandardToken = function () {
+var LPToken = function () {
     LocalContractStorage.defineProperties(this, {
         _swap: null,
         _name: null,
