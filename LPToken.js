@@ -121,7 +121,7 @@ LPToken.prototype = {
         var toBalance = this.balances.get(to) || new BigNumber(0);
         this.balances.set(to, toBalance.add(value));
 
-        this.transferEvent(true, Blockchain.transaction.to, to, value);
+        this._transferEvent(true, Blockchain.transaction.to, to, value);
     }
 
     burn: function (value) {
@@ -139,7 +139,7 @@ LPToken.prototype = {
 
         this.balances.set(from, balance.sub(value));
 
-        this.transferEvent(true, from, Blockchain.transaction.to, value);
+        this._transferEvent(true, from, Blockchain.transaction.to, value);
     }
 
     burnFrom: function (from, value) {
@@ -158,7 +158,7 @@ LPToken.prototype = {
             allowed.set(spender, allowedValue.sub(value));
             this.allowed.set(from, allowed);
 
-            this.transferEvent(true, from, Blockchain.transaction.to, value);
+            this._transferEvent(true, from, Blockchain.transaction.to, value);
         } else {
             throw new Error("transfer failed.");
         }
@@ -181,7 +181,7 @@ LPToken.prototype = {
         var toBalance = this.balances.get(to) || new BigNumber(0);
         this.balances.set(to, toBalance.add(value));
 
-        this.transferEvent(true, from, to, value);
+        this._transferEvent(true, from, to, value);
     },
 
     transferFrom: function (from, to, value) {
@@ -203,13 +203,13 @@ LPToken.prototype = {
             var toBalance = this.balances.get(to) || new BigNumber(0);
             this.balances.set(to, toBalance.add(value));
 
-            this.transferEvent(true, from, to, value);
+            this._transferEvent(true, from, to, value);
         } else {
             throw new Error("transfer failed.");
         }
     },
 
-    transferEvent: function (status, from, to, value) {
+    _transferEvent: function (status, from, to, value) {
         Event.Trigger(this.name(), {
             Status: status,
             Transfer: {
@@ -240,10 +240,10 @@ LPToken.prototype = {
 
         this.allowed.set(from, owned);
 
-        this.approveEvent(true, from, spender, value);
+        this._approveEvent(true, from, spender, value);
     },
 
-    approveEvent: function (status, from, spender, value) {
+    _approveEvent: function (status, from, spender, value) {
         Event.Trigger(this.name(), {
             Status: status,
             Approve: {
