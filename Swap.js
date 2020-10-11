@@ -124,6 +124,10 @@ Swap.prototype = {
   }
 
   createPair: function (token0, token1, lp) {
+    if (Blockchain.transaction.from != this._owner) {
+      throw new Error("Only owner can create pair");
+    }
+
     if (Blockchain.verifyAddress(token0) != 88 ||
         Blockchain.verifyAddress(token1) != 88 ||
         Blockchain.verifyAddress(lp) != 88) {
@@ -171,13 +175,13 @@ Swap.prototype = {
 
     if (timeElapsed > 0 && pair.reserve0 > 0 && pair.reserve1 > 0) {
       pair.price0CumulativeLast =
-          new BigNumber(pair.price0CumulativeLast).add(
+          new BigNumber(pair.price0CumulativeLast).plus(
               new BigNumber(pair.reserve1).div(
-                  pair.reserve0).mul(timeElapsed));
+                  pair.reserve0).times(timeElapsed));
       pair.price1CumulativeLast =
-          new BigNumber(pair.price1CumulativeLast).add(
+          new BigNumber(pair.price1CumulativeLast).plus(
               new BigNumber(pair.reserve0).div(
-                  pair.reserve1).mul(timeElapsed));
+                  pair.reserve1).times(timeElapsed));
     }
 
     pair.reserve0 = balance0;
@@ -236,15 +240,15 @@ Swap.prototype = {
     let liquidity;
 
     if (_totalSupply.eq(0)) {
-      liquidity = amount0.mul(amount1).sqrt().sub(MINIMUM_LIQUIDITY);
+      liquidity = amount0.times(amount1).sqrt().minus(MINIMUM_LIQUIDITY);
       this._mint(pair.lp, blockchain.contractName(), MINIMUM_LIQUIDITY); // permanently lock the first MINIMUM_LIQUIDITY tokens
     } else {
-      liquidity = BigNumber.min(amount0.mul(_totalSupply).div(_reserve0),
-          amount1.mul(_totalSupply).div(_reserve1));
+      liquidity = BigNumber.min(amount0.times(_totalSupply).div(_reserve0),
+          amount1.times(_totalSupply).div(_reserve1));
     }
 
-    const balance0 = amount0.add(pair.reserve0);
-    const balance1 = amount1.add(pair.reserve1);
+    const balance0 = amount0.plus(pair.reserve0);
+    const balance1 = amount1.plus(pair.reserve1);
 
     if (liquidity.lt(UNIT_LIQUIDITY)) {
       throw 'Swap: INSUFFICIENT_LIQUIDITY_MINTED';
@@ -270,8 +274,8 @@ Swap.prototype = {
     var lpContract = new Blockchain.Contract(pair.lp);
     const _totalSupply = new BigNumber(tokenContract.call("totalSupply"));
 
-    const amount0 = liquidity.mul(pair.reserve0).div(_totalSupply); // using balances ensures pro-rata distribution
-    const amount1 = liquidity.mul(pair.reserve1).div(_totalSupply); // using balances ensures pro-rata distribution
+    const amount0 = liquidity.times(pair.reserve0).div(_totalSupply); // using balances ensures pro-rata distribution
+    const amount1 = liquidity.times(pair.reserve1).div(_totalSupply); // using balances ensures pro-rata distribution
 
     if (amount0.lte(0) || amount1.lte(0)) {
       throw 'Swap: INSUFFICIENT_LIQUIDITY_BURNED';
@@ -290,8 +294,8 @@ Swap.prototype = {
         amount1.toString());
 
 
-    const balance0 = new BigNumber(pair.reserve0).sub(amount0);
-    const balance1 = new BigNumber(pair.reserve1).sub(amount1);
+    const balance0 = new BigNumber(pair.reserve0).minus(amount0);
+    const balance1 = new BigNumber(pair.reserve1).minus(amount1);
 
     this._update(pair, balance0, balance1);
 
@@ -360,13 +364,13 @@ Swap.prototype = {
           amount1Out.toString());
     }
 
-    const balance0 = new BigNumber(pair.reserve0).add(amount0In).sub(amount0Out);
-    const balance1 = new BigNumber(pair.reserve1).add(amount1In).sub(amount1Out);
+    const balance0 = new BigNumber(pair.reserve0).plus(amount0In).minus(amount0Out);
+    const balance1 = new BigNumber(pair.reserve1).plus(amount1In).minus(amount1Out);
 
-    const balance0Adjusted = balance0.mul(1000).sub(amount0In.mul(3));
-    const balance1Adjusted = balance1.mul(1000).sub(amount1In.mul(3));
+    const balance0Adjusted = balance0.times(1000).minus(amount0In.times(3));
+    const balance1Adjusted = balance1.times(1000).minus(amount1In.times(3));
 
-    if (balance0Adjusted.mul(balance1Adjusted).lt(new BigNumber(pair.reserve0).mul(pair.reserve1).mul(1000000))) {
+    if (balance0Adjusted.times(balance1Adjusted).lt(new BigNumber(pair.reserve0).times(pair.reserve1).times(1000000))) {
       throw "Swap: K";
     }
 
@@ -382,7 +386,7 @@ Swap.prototype = {
       throw "Swap: INVALID_INPUT";
     }
 
-    return amountADesired.mul(reserveB).div(reserveA);
+    return amountADesired.times(reserveB).div(reserveA);
   }
 
   quote: function (amountADesired, reserveA, reserveB) {
@@ -622,9 +626,9 @@ Swap.prototype = {
       throw 'Swap: INSUFFICIENT_LIQUIDITY';
     }
 
-    const amountInWithFee = amountIn.mul(997);
-    const numerator = amountInWithFee.mul(reserveOut);
-    const denominator = reserveIn.mul(1000).add(amountInWithFee);
+    const amountInWithFee = amountIn.times(997);
+    const numerator = amountInWithFee.times(reserveOut);
+    const denominator = reserveIn.times(1000).plus(amountInWithFee);
     return numerator.div(denominator).toString();
   }
 
@@ -642,9 +646,9 @@ Swap.prototype = {
       throw 'Swap: INSUFFICIENT_LIQUIDITY';
     }
 
-    const numerator = reserveIn.mul(amountOut).mul(1000);
-    const denominator = reserveOut.sub(amountOut).mul(997);
-    return numerator.div(denominator).add(1).toString();
+    const numerator = reserveIn.times(amountOut).times(1000);
+    const denominator = reserveOut.minus(amountOut).times(997);
+    return numerator.div(denominator).plus(1).toString();
   }
 
   // performs chained getAmountOut calculations on any number of pairs

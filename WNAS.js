@@ -104,7 +104,7 @@ WNAS.prototype = {
         var value = Blockchain.transaction.value;
         var balance = this.balances.get(from) || new BigNumber(0);
         
-        this.balances.set(from, balance.add(value));
+        this.balances.set(from, balance.plus(value));
 
         this._depositEvent(true, from, value);
     }
@@ -132,7 +132,7 @@ WNAS.prototype = {
             throw new Error("withdraw failed.");
         }
 
-        this.balances.set(from, balance.sub(value));
+        this.balances.set(from, balance.minus(value));
         Blockchain.transfer(from, value);
 
         this._withdrawEvent(true, from, value);
@@ -161,9 +161,9 @@ WNAS.prototype = {
             throw new Error("transfer failed.");
         }
 
-        this.balances.set(from, balance.sub(value));
+        this.balances.set(from, balance.minus(value));
         var toBalance = this.balances.get(to) || new BigNumber(0);
-        this.balances.set(to, toBalance.add(value));
+        this.balances.set(to, toBalance.plus(value));
 
         this._transferEvent(true, from, to, value);
     },
@@ -178,14 +178,14 @@ WNAS.prototype = {
 
         if (value.gte(0) && balance.gte(value) && allowedValue.gte(value)) {
 
-            this.balances.set(from, balance.sub(value));
+            this.balances.set(from, balance.minus(value));
 
             // update allowed value
-            allowed.set(spender, allowedValue.sub(value));
+            allowed.set(spender, allowedValue.minus(value));
             this.allowed.set(from, allowed);
 
             var toBalance = this.balances.get(to) || new BigNumber(0);
-            this.balances.set(to, toBalance.add(value));
+            this.balances.set(to, toBalance.plus(value));
 
             this._transferEvent(true, from, to, value);
         } else {
