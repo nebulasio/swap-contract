@@ -27,6 +27,7 @@ var Swap = function () {
 
   LocalContractStorage.defineProperties(this, {
     _owner: null,
+    _wnas: null,
     _allPairs: {
       stringify: function (array) {
         return JSON.stringify(array);
@@ -75,7 +76,8 @@ var Swap = function () {
 
 Swap.prototype = {
 
-  init() {
+  init(wnas) {
+    this._wnas = wnas;
     this._owner = Blockchain.transaction.from;
   }
 
@@ -202,7 +204,7 @@ Swap.prototype = {
     tokenContract.call("burnFrom", fromAddress, amount.toString());
   }
 
-  _mintInner: function (tokenA, tokenB, amountA, amountB, toAddress) {
+  _mintInner: function (tokenA, tokenB, amountA, amountB, toAddress, alreadyHasWNAS) {
     const pair = this.getPair(tokenA, tokenB);
 
     const amount0 = new BigNumber(pair.token0 == tokenA ? amountA : amountB);
@@ -212,17 +214,21 @@ Swap.prototype = {
       throw "Swap: INVALID_INPUT";
     }
 
-    var token0Contract = new Blockchain.Contract(pair.token0);
-    token0Contract.call("transferFrom",
-        Blockchain.transaction.from,
-        Blockchain.transaction.to,
-        amount0.toString());
+    if (pair.token0 != this._wnas || !alreadyHasWNAS) {
+      var token0Contract = new Blockchain.Contract(pair.token0);
+      token0Contract.call("transferFrom",
+          Blockchain.transaction.from,
+          Blockchain.transaction.to,
+          amount0.toString());
+    }
 
-    var token1Contract = new Blockchain.Contract(pair.token1);
-    token1Contract.call("transferFrom",
-        Blockchain.transaction.from,
-        Blockchain.transaction.to,
-        amount1.toString());
+    if (pair.token1 != this._wnas || !alreadyHasWNAS) {
+      var token1Contract = new Blockchain.Contract(pair.token1);
+      token1Contract.call("transferFrom",
+          Blockchain.transaction.from,
+          Blockchain.transaction.to,
+          amount1.toString());
+    }
 
     var lpContract = new Blockchain.Contract(pair.lp);
     const _totalSupply = new BigNumber(tokenContract.call("totalSupply"));
@@ -408,7 +414,7 @@ Swap.prototype = {
     }
 
     if (reserveA.eq(0) && reserveB.eq(0)) {
-      return [amountADesired, amountBDesired];
+      return [amountADesired.toString(), amountBDesired.toString()];
     } else {
       const amountBOptimal = this._quote(amountADesired, reserveA, reserveB);
       if (amountBOptimal.lte(amountBDesired)) {
@@ -416,7 +422,7 @@ Swap.prototype = {
           throw "insufficient b amount";
         }
 
-        return [amountADesired, amountBOptimal];
+        return [amountADesired.toString(), amountBOptimal.toString()];
       } else {
         const amountAOptimal = this._quote(amountBDesired, reserveB, reserveA);
 
@@ -428,7 +434,7 @@ Swap.prototype = {
           throw "insufficient a amount";
         }
 
-        return [amountAOptimal, amountBDesired];
+        return [amountAOptimal.toString(), amountBDesired.toString()];
       }
     }
   }
@@ -453,17 +459,53 @@ Swap.prototype = {
 
     const amountArray = this._addLiquidity(
         tokenA, tokenB, amountADesired, amountBDesired, amountAMin, amountBMin);
-    const amountA = amountArray[0];
-    const amountB = amountArray[1];
-    const liquidity = this._mintInner(tokenA, tokenB, amountA.toString(), amountB.toString(), toAddress);
+    const amountAStr = amountArray[0];
+    const amountBStr = amountArray[1];
+    const liquidity = this._mintInner(tokenA, tokenB, amountAStr, amountBStr, toAddress, false);
 
-    const pair = this.getPair(tokenA, tokenB);
+    return JSON.stringify([amountAStr, amountBStr, liquidity.toString()]);
+  }
 
-    if (tokenA == pair.token0) {
-      return [amountA, amountB, liquidity];
-    } else {
-      return [amountA, amountB, liquidity];
+  addLiquidityNAS: function(
+      token,
+      amountTokenDesired,
+      amountTokenMin,
+      amountNASMin,
+      toAddress
+  ) {
+    amountTokenDesired = new BigNumber(amountTokenDesired);
+    amountTokenMin = new BigNumber(amountTokenMin);
+    amountNASMin = new BigNumber(amountNASMin);
+
+    if (amountTokenDesired.lte(0) || amountTokenMin.lte(0) || amountNASMin.lte(0)) {
+      throw "Swap: INVALID_INPUT";
     }
+
+    const value = Blockchain.transaction.value;
+
+    const amountArray = _addLiquidity(
+        token,
+        this._nas,
+        amountTokenDesired,
+        Blockchain.transaction.value,
+        amountTokenMin,
+        amountETHMin
+    );
+
+    const amountTokenStr = amountArray[0];
+    const amountNASStr = amountArray[1];
+
+    var wnasContract = new Blockchain.Contract(this._wnas);
+    wnasContract.value(amountNASStr).call("deposit");
+
+    const liquidity = this._mintInner(token, this._wnas, amountTokenStr, amountNASStr, toAddress, true);
+
+    // refund dust nas, if any
+    if (value.gt(amountNASStr)) {
+      Blockchain.transfer(toAddress, value.minus(amountNASStr));
+    }
+
+    return JSON.stringify([amountTokenStr, amountNASStr, liquidity.toString()]);
   }
 
   removeLiquidity: function (
@@ -493,6 +535,37 @@ Swap.prototype = {
     if (amountB.lt(amountBMin)) {
       throw "Swap: INSUFFICIENT_B_AMOUNT";
     }
+
+    return JSON.stringify([amountA.toString(), amountB.toString()]);
+  }
+
+  removeLiquidityNAS: function(
+      token,
+      liquidity,
+      amountTokenMin,
+      amountNASMin,
+      toAddress
+  ) {
+    const res = JSON.parse(this.removeLiquidity(
+        token,
+        this._wnas,
+        liquidity,
+        amountTokenMin,
+        amountNASMin,
+        Blockchain.transaction.to,
+    ));
+
+    const amountTokenStr = res[0];
+    const amountNASStr = res[1];
+
+    var tokenContract = new Blockchain.Contract(token);
+    tokenContract.call("transfer", toAddress, amountTokenStr);
+
+    var wnasContract = new Blockchain.Contract(this._wnas);
+    wnasContract.call("withdraw", amountNASStr);
+    Blockchain.transfer(toAddress, amountNASStr);
+
+    return JSON.stringify([amountTokenStr, amountNASStr]);
   }
 
   _swapByPath: function (amounts, path, toAddress) {
