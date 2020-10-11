@@ -1,4 +1,4 @@
-'use strict';
+"use strict";
 
 var Allowed = function (obj) {
     this.allowed = {};
@@ -107,7 +107,7 @@ WNAS.prototype = {
         this.balances.set(from, balance.plus(value));
 
         this._depositEvent(true, from, value);
-    }
+    },
 
     _depositEvent: function (status, from, value) {
         Event.Trigger(this.name(), {
@@ -136,7 +136,7 @@ WNAS.prototype = {
         Blockchain.transfer(from, value);
 
         this._withdrawEvent(true, from, value);
-    }
+    },
 
     _withdrawEvent: function (status, from, value) {
         Event.Trigger(this.name(), {

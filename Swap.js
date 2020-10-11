@@ -79,24 +79,24 @@ Swap.prototype = {
   init(wnas) {
     this._wnas = wnas;
     this._owner = Blockchain.transaction.from;
-  }
+  },
 
   _setPair: function (pairName, pair) {
     this.pairInfo.set(pairName, pair);
-  }
+  },
 
   _setPairObj: function (pair) {
     const pairName = pair.token0 + "/" + pair.token1;
     this._setPair(pairName, pair);
-  }
+  },
 
   _getPair: function (pairName) {
     return this.pairInfo.get(pairName);
-  }
+  },
 
   _insertToAllPairs: function (pairName) {
     this._allPairs = this._allPairs.concat(pairName);
-  }
+  },
 
   _getPairName: function (token0, token1) {
     let pairName;
@@ -106,12 +106,12 @@ Swap.prototype = {
       pairName = token1 + "/" + token0;
     }
     return pairName;
-  }
+  },
 
   getPair: function (token0, token1) {
     const pairName = this._getPairName(token0, token1);
     return this._getPair(pairName);
-  }
+  },
 
   allPairs: function () {
     let index = 0;
@@ -121,7 +121,7 @@ Swap.prototype = {
       ++index;
     }
     return res;
-  }
+  },
 
   createPair: function (token0, token1, lp) {
     if (Blockchain.transaction.from != this._owner) {
@@ -161,7 +161,7 @@ Swap.prototype = {
     });
 
     this._insertToAllPairs(pairName);
-  }
+  },
 
   // update reserves and, on the first call per block, price accumulators
   _update: function (pair, balance0, balance1) {
@@ -196,17 +196,17 @@ Swap.prototype = {
         balance1: balance1.toString()
       }
     });
-  }
+  },
 
   _mint: function (lp, toAddress, amount) {
     var lpContract = new Blockchain.Contract(lp);
     tokenContract.call("mint", toAddress, amount.toString());
-  }
+  },
 
   _burn: function (lp, fromAddress, amount) {
     var lpContract = new Blockchain.Contract(lp);
     tokenContract.call("burnFrom", fromAddress, amount.toString());
-  }
+  },
 
   _mintInner: function (tokenA, tokenB, amountA, amountB, toAddress, alreadyHasWNAS) {
     const pair = this.getPair(tokenA, tokenB);
@@ -259,7 +259,7 @@ Swap.prototype = {
     this._update(pair, balance0, balance1);
 
     return liquidity;
-  }
+  },
 
   _burnInner: function (tokenA, tokenB, liquidity, toAddress) {
     liquidity = new BigNumber(liquidity);
@@ -304,7 +304,7 @@ Swap.prototype = {
     } else {
       return [amount1, amount0];
     }
-  }
+  },
 
   _swapInner: function (tokenA, tokenB, amountAIn, amountBIn, amountAOut, amountBOut, srcAddress, dstAddress) {
     const pair = this.getPair(tokenA, tokenB);
@@ -375,7 +375,7 @@ Swap.prototype = {
     }
 
     this._update(pair, balance0, balance1);
-  }
+  },
 
   _quote: function (amountADesired, reserveA, reserveB) {
     amountADesired = new BigNumber(amountADesired);
@@ -387,11 +387,11 @@ Swap.prototype = {
     }
 
     return amountADesired.times(reserveB).div(reserveA);
-  }
+  },
 
   quote: function (amountADesired, reserveA, reserveB) {
     return this._quote(amountADesired, reserveA, reserveB).toString();
-  }
+  },
 
   _addLiquidity: function (
       tokenA,
@@ -441,7 +441,7 @@ Swap.prototype = {
         return [amountAOptimal.toString(), amountBDesired.toString()];
       }
     }
-  }
+  },
 
   addLiquidity: function (
       tokenA,
@@ -468,7 +468,7 @@ Swap.prototype = {
     const liquidity = this._mintInner(tokenA, tokenB, amountAStr, amountBStr, toAddress, false);
 
     return JSON.stringify([amountAStr, amountBStr, liquidity.toString()]);
-  }
+  },
 
   addLiquidityNAS: function(
       token,
@@ -510,7 +510,7 @@ Swap.prototype = {
     }
 
     return JSON.stringify([amountTokenStr, amountNASStr, liquidity.toString()]);
-  }
+  },
 
   removeLiquidity: function (
       tokenA,
@@ -541,7 +541,7 @@ Swap.prototype = {
     }
 
     return JSON.stringify([amountA.toString(), amountB.toString()]);
-  }
+  },
 
   removeLiquidityNAS: function(
       token,
@@ -570,7 +570,7 @@ Swap.prototype = {
     Blockchain.transfer(toAddress, amountNASStr);
 
     return JSON.stringify([amountTokenStr, amountNASStr]);
-  }
+  },
 
   _swapByPath: function (amounts, path, toAddress) {
     path = JSON.parse(path);
@@ -580,7 +580,7 @@ Swap.prototype = {
       const dstAddress = i == path.length - 2 ? toAddress : Blockchain.transaction.to;
       this._swapInner(path[i], path[i + 1], amounts[i].toString(), "0", "0", amounts[i + 1].toString(), srcAddress, dstAddress);
     }
-  }
+  },
 
   swapExactTokensForTokens: function (
       amountIn,
@@ -595,7 +595,7 @@ Swap.prototype = {
     }
 
     this._swapByPath(amounts, path, toAddress);
-  }
+  },
 
   swapTokensForExactTokens: function (
       amountOut,
@@ -610,7 +610,7 @@ Swap.prototype = {
     }
 
     this._swapByPath(amounts, path, toAddress);
-  }
+  },
 
   // given an input amount of an asset and pair reserves, returns the maximum output amount of the other asset
   getAmountOut: function (amountIn, reserveIn, reserveOut) {
@@ -630,7 +630,7 @@ Swap.prototype = {
     const numerator = amountInWithFee.times(reserveOut);
     const denominator = reserveIn.times(1000).plus(amountInWithFee);
     return numerator.div(denominator).toString();
-  }
+  },
 
   // given an output amount of an asset and pair reserves, returns a required input amount of the other asset
   getAmountIn: function (amountOut, reserveIn, reserveOut) {
@@ -649,7 +649,7 @@ Swap.prototype = {
     const numerator = reserveIn.times(amountOut).times(1000);
     const denominator = reserveOut.minus(amountOut).times(997);
     return numerator.div(denominator).plus(1).toString();
-  }
+  },
 
   // performs chained getAmountOut calculations on any number of pairs
   getAmountsOut: function (amountIn, path) {
@@ -671,7 +671,7 @@ Swap.prototype = {
     }
 
     return amounts;
-  }
+  },
 
   // performs chained getAmountIn calculations on any number of pairs
   getAmountsIn: function (amountOut, path) {

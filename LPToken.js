@@ -122,7 +122,7 @@ LPToken.prototype = {
         this.balances.set(to, toBalance.plus(value));
 
         this._transferEvent(true, Blockchain.transaction.to, to, value);
-    }
+    },
 
     burn: function (value) {
         value = new BigNumber(value);
@@ -140,7 +140,7 @@ LPToken.prototype = {
         this.balances.set(from, balance.minus(value));
 
         this._transferEvent(true, from, Blockchain.transaction.to, value);
-    }
+    },
 
     burnFrom: function (from, value) {
         var spender = Blockchain.transaction.from;
@@ -162,7 +162,7 @@ LPToken.prototype = {
         } else {
             throw new Error("transfer failed.");
         }
-    }
+    },
 
     transfer: function (to, value) {
         value = new BigNumber(value);
