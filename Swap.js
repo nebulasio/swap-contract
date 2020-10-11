@@ -687,7 +687,7 @@ Swap.prototype = {
       throw 'Swap: INVALID_PATH';
     }
 
-    const amounts = this..getAmountsIn(amountOut, path);
+    const amounts = this.getAmountsIn(amountOut, path);
     if (amounts[0] > Blockchain.transaction.value) {
       throw 'Swap: EXCESSIVE_INPUT_AMOUNT';
     }
