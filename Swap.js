@@ -493,7 +493,7 @@ Swap.prototype = {
         amountTokenDesired,
         Blockchain.transaction.value,
         amountTokenMin,
-        amountETHMin
+        amountNASMin
     );
 
     const amountTokenStr = amountArray[0];
@@ -572,11 +572,18 @@ Swap.prototype = {
     return JSON.stringify([amountTokenStr, amountNASStr]);
   },
 
-  _swapByPath: function (amounts, path, toAddress) {
+  _swapByPath: function (amounts, path, toAddress, alreadyHasWNAS) {
     path = JSON.parse(path);
 
     for (let i = 0; i < path.length - 1; i++) {
-      const srcAddress = i == 0 ? Blockchain.transaction.from : Blockchain.transaction.to;
+      var srcAddress;
+
+      if (i == 0 && path[0] == this._wnas && alreadyHasWNAS || i != 0) {
+        srcAddress = Blockchain.transaction.to;
+      } else {
+        srcAddress = Blockchain.transaction.from;
+      }
+
       const dstAddress = i == path.length - 2 ? toAddress : Blockchain.transaction.to;
       this._swapInner(path[i], path[i + 1], amounts[i].toString(), "0", "0", amounts[i + 1].toString(), srcAddress, dstAddress);
     }
@@ -594,7 +601,9 @@ Swap.prototype = {
       throw 'Swap: INSUFFICIENT_OUTPUT_AMOUNT';
     }
 
-    this._swapByPath(amounts, path, toAddress);
+    this._swapByPath(amounts, path, toAddress, false);
+
+    return JSON.stringify(amounts);
   },
 
   swapTokensForExactTokens: function (
@@ -609,7 +618,91 @@ Swap.prototype = {
       throw 'Swap: EXCESSIVE_INPUT_AMOUNT';
     }
 
-    this._swapByPath(amounts, path, toAddress);
+    this._swapByPath(amounts, path, toAddress, false);
+
+    return JSON.stringify(amounts);
+  },
+
+  swapExactNASForTokens: function(amountOutMin, path, toAddress) {
+    if (path[0] != this._wnas) {
+      throw 'Swap: INVALID_PATH';
+    }
+
+    const amounts = this.getAmountsOut(Blockchain.transaction.value, path);
+
+    if (new BigNumber(amounts[amounts.length - 1]).lt(amountOutMin)) {
+      throw 'Swap: INSUFFICIENT_OUTPUT_AMOUNT';
+    }
+
+    var wnasContract = new Blockchain.Contract(this._wnas);
+    wnasContract.value(amounts[0]).call("deposit");
+
+    this._swapByPath(amounts, path, toAddress, true);
+
+    return JSON.stringify(amounts);
+  },
+
+  swapTokensForExactNAS: function(amountOut, amountInMax, path, toAddress) {
+    if (path[path.length - 1] != this._wnas) {
+      throw 'Swap: INVALID_PATH';
+    }
+
+    const amounts = this.getAmountsIn(amountOut, path);
+
+    if (new BigNumber(amounts[0]).gt(amountInMax)) {
+      throw 'Swap: EXCESSIVE_INPUT_AMOUNT';
+    }
+
+    this._swapByPath(amounts, path, Blockchain.transaction.to, false);
+
+    var wnasContract = new Blockchain.Contract(this._wnas);
+    wnasContract.call("withdraw", amounts[amounts.length - 1]);
+    Blockchain.transfer(toAddress, new BigNumber(amounts[amounts.length - 1]));
+
+    return JSON.stringify(amounts);
+  },
+
+  swapExactTokensForNAS: function(amountIn, amountOutMin, path, toAddress) {
+    if (path[path.length - 1] != this._wnas) {
+      throw 'Swap: INVALID_PATH';
+    }
+
+    const amounts = this.getAmountsOut(amountIn, path);
+
+    if (new BigNumber(amounts[amounts.length - 1]).lt(amountOutMin)) {
+      throw 'Swap: INSUFFICIENT_OUTPUT_AMOUNT';
+    }
+
+    this._swapByPath(amounts, path, Blockchain.transaction.to, false);
+
+    var wnasContract = new Blockchain.Contract(this._wnas);
+    wnasContract.call("withdraw", amounts[amounts.length - 1]);
+    Blockchain.transfer(toAddress, new BigNumber(amounts[amounts.length - 1]));
+
+    return JSON.stringify(amounts);
+  },
+
+  swapNASForExactTokens: function(amountOut, path, toAddress) {
+    if (path[0] != this._wnas) {
+      throw 'Swap: INVALID_PATH';
+    }
+
+    const amounts = this..getAmountsIn(amountOut, path);
+    if (amounts[0] > Blockchain.transaction.value) {
+      throw 'Swap: EXCESSIVE_INPUT_AMOUNT';
+    }
+
+    var wnasContract = new Blockchain.Contract(this._wnas);
+    wnasContract.value(amounts[0]).call("deposit");
+
+    this._swapByPath(amounts, path, toAddress, true);
+
+    // refund dust nas, if any
+    if (Blockchain.transaction.value > amounts[0]) {
+      Blockchain.transfer(toAddress, Blockchain.transaction.value.minus(amounts[0]));
+    }
+
+    return JSON.stringify(amounts);
   },
 
   // given an input amount of an asset and pair reserves, returns the maximum output amount of the other asset
