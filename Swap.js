@@ -33,7 +33,7 @@ var Swap = function () {
         return JSON.stringify(array);
       },
       parse: function (value) {
-        return JSON.parse(value || "[]");
+        return JSON.parse(value);
       }
     }
   });
@@ -79,6 +79,7 @@ Swap.prototype = {
   init(wnas) {
     this._wnas = wnas;
     this._owner = Blockchain.transaction.from;
+    this._allPairs = [];
   },
 
   _setPair: function (pairName, pair) {
@@ -146,7 +147,7 @@ Swap.prototype = {
       throw "pair exists";
     }
 
-    const now = Math.floor(tx.time / 1e9);
+    const now = Math.floor(Blockchain.transaction.timestamp / 1e3);
 
     this.pairInfo.set(pairName, {
       createdTime: now,
@@ -165,7 +166,7 @@ Swap.prototype = {
 
   // update reserves and, on the first call per block, price accumulators
   _update: function (pair, balance0, balance1) {
-    const now = Math.floor(tx.time / 1e9);
+    const now = Math.floor(Blockchain.transaction.timestamp / 1e3);
 
     if (now < pair.blockTimestampLast) {
       throw "block time error";
@@ -200,12 +201,12 @@ Swap.prototype = {
 
   _mint: function (lp, toAddress, amount) {
     var lpContract = new Blockchain.Contract(lp);
-    tokenContract.call("mint", toAddress, amount.toString());
+    lpContract.call("mint", toAddress, amount.toString());
   },
 
   _burn: function (lp, fromAddress, amount) {
     var lpContract = new Blockchain.Contract(lp);
-    tokenContract.call("burnFrom", fromAddress, amount.toString());
+    lpContract.call("burnFrom", fromAddress, amount.toString());
   },
 
   _mintInner: function (tokenA, tokenB, amountA, amountB, toAddress, alreadyHasWNAS) {
@@ -235,13 +236,13 @@ Swap.prototype = {
     }
 
     var lpContract = new Blockchain.Contract(pair.lp);
-    const _totalSupply = new BigNumber(tokenContract.call("totalSupply"));
+    const _totalSupply = new BigNumber(lpContract.call("totalSupply"));
 
     let liquidity;
 
     if (_totalSupply.eq(0)) {
       liquidity = amount0.times(amount1).sqrt().minus(MINIMUM_LIQUIDITY);
-      this._mint(pair.lp, blockchain.contractName(), MINIMUM_LIQUIDITY); // permanently lock the first MINIMUM_LIQUIDITY tokens
+      this._mint(pair.lp, Blockchain.transaction.to, MINIMUM_LIQUIDITY); // permanently lock the first MINIMUM_LIQUIDITY tokens
     } else {
       liquidity = BigNumber.min(amount0.times(_totalSupply).div(_reserve0),
           amount1.times(_totalSupply).div(_reserve1));
@@ -272,7 +273,7 @@ Swap.prototype = {
 
     // gas savings, must be defined here since totalSupply can update in _mintFee
     var lpContract = new Blockchain.Contract(pair.lp);
-    const _totalSupply = new BigNumber(tokenContract.call("totalSupply"));
+    const _totalSupply = new BigNumber(lpContract.call("totalSupply"));
 
     const amount0 = liquidity.times(pair.reserve0).div(_totalSupply); // using balances ensures pro-rata distribution
     const amount1 = liquidity.times(pair.reserve1).div(_totalSupply); // using balances ensures pro-rata distribution
@@ -487,9 +488,9 @@ Swap.prototype = {
 
     const value = Blockchain.transaction.value;
 
-    const amountArray = _addLiquidity(
+    const amountArray = this._addLiquidity(
         token,
-        this._nas,
+        this._wnas,
         amountTokenDesired,
         Blockchain.transaction.value,
         amountTokenMin,
