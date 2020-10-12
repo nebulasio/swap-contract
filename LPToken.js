@@ -120,6 +120,7 @@ LPToken.prototype = {
 
         var toBalance = this.balances.get(to) || new BigNumber(0);
         this.balances.set(to, toBalance.plus(value));
+        this._totalSupply = this._totalSupply.plus(value);
 
         this._transferEvent(true, Blockchain.transaction.to, to, value);
     },
@@ -138,6 +139,7 @@ LPToken.prototype = {
         }
 
         this.balances.set(from, balance.minus(value));
+        this._totalSupply = this._totalSupply.minus(value);
 
         this._transferEvent(true, from, Blockchain.transaction.to, value);
     },
@@ -153,6 +155,7 @@ LPToken.prototype = {
         if (value.gte(0) && balance.gte(value) && allowedValue.gte(value)) {
 
             this.balances.set(from, balance.minus(value));
+            this._totalSupply = this._totalSupply.minus(value);
 
             // update allowed value
             allowed.set(spender, allowedValue.minus(value));

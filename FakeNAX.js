@@ -104,6 +104,7 @@ FakeNAX.prototype = {
         var balance = this.balances.get(from) || new BigNumber(0);
         
         this.balances.set(from, balance.plus(value));
+        this._totalSupply = this._totalSupply.plus(value);
     },
 
     transfer: function (to, value) {

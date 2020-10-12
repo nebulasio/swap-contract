@@ -176,13 +176,13 @@ Swap.prototype = {
 
     if (timeElapsed > 0 && pair.reserve0 > 0 && pair.reserve1 > 0) {
       pair.price0CumulativeLast =
-          new BigNumber(pair.price0CumulativeLast).plus(
-              new BigNumber(pair.reserve1).div(
-                  pair.reserve0).times(timeElapsed));
+          new BigNumber(pair.price0CumulativeLast.plus(
+              pair.reserve1.div(
+                  pair.reserve0).times(timeElapsed)).toFixed(0, BigNumber.ROUND_DOWN));
       pair.price1CumulativeLast =
-          new BigNumber(pair.price1CumulativeLast).plus(
-              new BigNumber(pair.reserve0).div(
-                  pair.reserve1).times(timeElapsed));
+          new BigNumber(pair.price1CumulativeLast.plus(
+              pair.reserve0.div(
+                  pair.reserve1).times(timeElapsed)).toFixed(0, BigNumber.ROUND_DOWN));
     }
 
     pair.reserve0 = balance0;
@@ -248,6 +248,8 @@ Swap.prototype = {
           amount1.times(_totalSupply).div(_reserve1));
     }
 
+    liquidity = new BigNumber(liquidity.toFixed(0, BigNumber.ROUND_DOWN))
+
     const balance0 = amount0.plus(pair.reserve0);
     const balance1 = amount1.plus(pair.reserve1);
 
@@ -263,8 +265,6 @@ Swap.prototype = {
   },
 
   _burnInner: function (tokenA, tokenB, liquidity, toAddress) {
-    liquidity = new BigNumber(liquidity);
-
     if (liquidity.lt(UNIT_LIQUIDITY)) {
       throw "Swap: INVALID_INPUT";
     }
@@ -275,8 +275,8 @@ Swap.prototype = {
     var lpContract = new Blockchain.Contract(pair.lp);
     const _totalSupply = new BigNumber(lpContract.call("totalSupply"));
 
-    const amount0 = liquidity.times(pair.reserve0).div(_totalSupply); // using balances ensures pro-rata distribution
-    const amount1 = liquidity.times(pair.reserve1).div(_totalSupply); // using balances ensures pro-rata distribution
+    const amount0 = new BigNumber(liquidity.times(pair.reserve0).div(_totalSupply).toFixed(0, BigNumber.ROUND_DOWN)); // using balances ensures pro-rata distribution
+    const amount1 = new BigNumber(liquidity.times(pair.reserve1).div(_totalSupply).toFixed(0, BigNumber.ROUND_DOWN)); // using balances ensures pro-rata distribution
 
     if (amount0.lte(0) || amount1.lte(0)) {
       throw 'Swap: INSUFFICIENT_LIQUIDITY_BURNED';
@@ -294,9 +294,8 @@ Swap.prototype = {
         Blockchain.transaction.from,
         amount1.toString());
 
-
-    const balance0 = new BigNumber(pair.reserve0).minus(amount0);
-    const balance1 = new BigNumber(pair.reserve1).minus(amount1);
+    const balance0 = pair.reserve0.minus(amount0);
+    const balance1 = pair.reserve1.minus(amount1);
 
     this._update(pair, balance0, balance1);
 
@@ -365,13 +364,13 @@ Swap.prototype = {
           amount1Out.toString());
     }
 
-    const balance0 = new BigNumber(pair.reserve0).plus(amount0In).minus(amount0Out);
-    const balance1 = new BigNumber(pair.reserve1).plus(amount1In).minus(amount1Out);
+    const balance0 = pair.reserve0.plus(amount0In).minus(amount0Out);
+    const balance1 = pair.reserve1.plus(amount1In).minus(amount1Out);
 
     const balance0Adjusted = balance0.times(1000).minus(amount0In.times(3));
     const balance1Adjusted = balance1.times(1000).minus(amount1In.times(3));
 
-    if (balance0Adjusted.times(balance1Adjusted).lt(new BigNumber(pair.reserve0).times(pair.reserve1).times(1000000))) {
+    if (balance0Adjusted.times(balance1Adjusted).lt(pair.reserve0.times(pair.reserve1).times(1000000))) {
       throw "Swap: K";
     }
 
@@ -387,7 +386,7 @@ Swap.prototype = {
       throw "Swap: INVALID_INPUT";
     }
 
-    return amountADesired.times(reserveB).div(reserveA);
+    return new BigNumber(amountADesired.times(reserveB).div(reserveA).toFixed(0, BigNumber.ROUND_DOWN));
   },
 
   quote: function (amountADesired, reserveA, reserveB) {
@@ -411,11 +410,11 @@ Swap.prototype = {
     let reserveA;
     let reserveB; 
     if (tokenA == pair.token0) {
-      reserveA = new BigNumber(pair.reserve0);
-      reserveB = new BigNumber(pair.reserve1);
+      reserveA = pair.reserve0;
+      reserveB = pair.reserve1;
     } else {
-      reserveA = new BigNumber(pair.reserve1);
-      reserveB = new BigNumber(pair.reserve0);
+      reserveA = pair.reserve1;
+      reserveB = pair.reserve0;
     }
 
     if (reserveA.eq(0) && reserveB.eq(0)) {
@@ -529,7 +528,7 @@ Swap.prototype = {
       throw "Swap: INVALID_INPUT";
     }
 
-    const amountArray = this._burnInner(tokenA, tokenB, liquidity.toString(), toAddress);
+    const amountArray = this._burnInner(tokenA, tokenB, liquidity, toAddress);
     const amountA = new BigNumber(amountArray[0]);
     const amountB = new BigNumber(amountArray[1]);
 
@@ -723,7 +722,7 @@ Swap.prototype = {
     const amountInWithFee = amountIn.times(997);
     const numerator = amountInWithFee.times(reserveOut);
     const denominator = reserveIn.times(1000).plus(amountInWithFee);
-    return numerator.div(denominator).toString();
+    return numerator.div(denominator).toFixed(0, BigNumber.ROUND_DOWN);
   },
 
   // given an output amount of an asset and pair reserves, returns a required input amount of the other asset
@@ -742,7 +741,7 @@ Swap.prototype = {
 
     const numerator = reserveIn.times(amountOut).times(1000);
     const denominator = reserveOut.minus(amountOut).times(997);
-    return numerator.div(denominator).plus(1).toString();
+    return numerator.div(denominator).plus(1).toFixed(0, BigNumber.ROUND_DOWN);
   },
 
   // performs chained getAmountOut calculations on any number of pairs

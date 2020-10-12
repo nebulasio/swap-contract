@@ -105,6 +105,7 @@ WNAS.prototype = {
         var balance = this.balances.get(from) || new BigNumber(0);
         
         this.balances.set(from, balance.plus(value));
+        this._totalSupply = this._totalSupply.plus(value);
 
         this._depositEvent(true, from, value);
     },
@@ -134,6 +135,7 @@ WNAS.prototype = {
 
         this.balances.set(from, balance.minus(value));
         Blockchain.transfer(from, value);
+        this._totalSupply = this._totalSupply.minus(value);
 
         this._withdrawEvent(true, from, value);
     },
