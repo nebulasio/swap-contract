@@ -573,7 +573,9 @@ Swap.prototype = {
   },
 
   _swapByPath: function (amounts, path, toAddress, alreadyHasWNAS) {
-    path = JSON.parse(path);
+    if (typeof path === "string") {
+      path = JSON.parse(path);
+    }
 
     for (let i = 0; i < path.length - 1; i++) {
       var srcAddress;
@@ -595,6 +597,10 @@ Swap.prototype = {
       path,
       toAddress
   ) {
+    if (typeof path === "string") {
+      path = JSON.parse(path);
+    }
+
     const amounts = this.getAmountsOut(amountIn, path);
 
     if (new BigNumber(amounts[amounts.length - 1]).lt(amountOutMin)) {
@@ -612,6 +618,10 @@ Swap.prototype = {
       path,
       toAddress
   ) {
+    if (typeof path === "string") {
+      path = JSON.parse(path);
+    }
+
     const amounts = this.getAmountsIn(amountOut, path);
 
     if (new BigNumber(amounts[0]).gt(amountInMax)) {
@@ -624,6 +634,10 @@ Swap.prototype = {
   },
 
   swapExactNASForTokens: function(amountOutMin, path, toAddress) {
+    if (typeof path === "string") {
+      path = JSON.parse(path);
+    }
+
     if (path[0] != this._wnas) {
       throw 'Swap: INVALID_PATH';
     }
@@ -643,6 +657,10 @@ Swap.prototype = {
   },
 
   swapTokensForExactNAS: function(amountOut, amountInMax, path, toAddress) {
+    if (typeof path === "string") {
+      path = JSON.parse(path);
+    }
+
     if (path[path.length - 1] != this._wnas) {
       throw 'Swap: INVALID_PATH';
     }
@@ -663,6 +681,10 @@ Swap.prototype = {
   },
 
   swapExactTokensForNAS: function(amountIn, amountOutMin, path, toAddress) {
+    if (typeof path === "string") {
+      path = JSON.parse(path);
+    }
+
     if (path[path.length - 1] != this._wnas) {
       throw 'Swap: INVALID_PATH';
     }
@@ -683,6 +705,10 @@ Swap.prototype = {
   },
 
   swapNASForExactTokens: function(amountOut, path, toAddress) {
+    if (typeof path === "string") {
+      path = JSON.parse(path);
+    }
+
     if (path[0] != this._wnas) {
       throw 'Swap: INVALID_PATH';
     }
@@ -746,7 +772,9 @@ Swap.prototype = {
 
   // performs chained getAmountOut calculations on any number of pairs
   getAmountsOut: function (amountIn, path) {
-    path = JSON.parse(path);
+    if (typeof path === "string") {
+      path = JSON.parse(path);
+    }
 
     if (path.length < 2) {
       throw 'Swap: INVALID_PATH';
@@ -768,7 +796,9 @@ Swap.prototype = {
 
   // performs chained getAmountIn calculations on any number of pairs
   getAmountsIn: function (amountOut, path) {
-    path = JSON.parse(path);
+    if (typeof path === "string") {
+      path = JSON.parse(path);
+    }
 
     if (path.length < 2) {
       throw 'Swap: INVALID_PATH';
@@ -779,11 +809,13 @@ Swap.prototype = {
       const pair = this.getPair(path[i - 1], path[i]);
 
       if (pair.token0 == path[i - 1]) {
-        amounts.unshift(this.getAmountOut(amounts[i], pair.reserve0, pair.reserve1));
+        amounts.push(this.getAmountIn(amounts[path.length - 1 - i], pair.reserve0, pair.reserve1));
       } else {
-        amounts.unshift(this.getAmountOut(amounts[i], pair.reserve1, pair.reserve0));
+        amounts.push(this.getAmountIn(amounts[path.length - 1 - i], pair.reserve1, pair.reserve0));
       }
     }
+
+    amounts.reverse();
 
     return amounts;
   }
