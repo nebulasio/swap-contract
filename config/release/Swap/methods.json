@@ -1,0 +1,170 @@
+{
+  "allMethods": [
+    "getPair",
+    "allPairs",
+    "createPair",
+    "quote",
+    "addLiquidity",
+    "addLiquidityNAS",
+    "removeLiquidity",
+    "removeLiquidityNAS",
+    "swapExactTokensForTokens",
+    "swapTokensForExactTokens",
+    "swapExactNASForTokens",
+    "swapTokensForExactNAS",
+    "swapExactTokensForNAS",
+    "swapNASForExactTokens",
+    "getAmountOut",
+    "getAmountIn",
+    "getAmountsOut",
+    "getAmountsIn"
+  ],
+  "testMethods": [],
+  "params": {
+    "getPair": {
+      "caller": "{caller}",
+      "value": "0",
+      "args": {
+        "token0": null,
+        "token1": null
+      }
+    },
+    "allPairs": {
+      "caller": "{caller}",
+      "value": "0",
+      "args": {}
+    },
+    "createPair": {
+      "caller": "{caller}",
+      "value": "0",
+      "args": {
+        "token0": null,
+        "token1": null,
+        "lp": null
+      }
+    },
+    "quote": {
+      "caller": "{caller}",
+      "value": "0",
+      "args": {
+        "amountADesired": null,
+        "reserveA": null,
+        "reserveB": null
+      }
+    },
+    "addLiquidity": {
+      "caller": "{caller}",
+      "value": "0",
+      "args": {
+        "amountADesired": null
+      }
+    },
+    "addLiquidityNAS": {
+      "caller": "{caller}",
+      "value": "0",
+      "args": {
+        "amountTokenDesired": null
+      }
+    },
+    "removeLiquidity": {
+      "caller": "{caller}",
+      "value": "0",
+      "args": {
+        "liquidity": null
+      }
+    },
+    "removeLiquidityNAS": {
+      "caller": "{caller}",
+      "value": "0",
+      "args": {
+        "token": null
+      }
+    },
+    "swapExactTokensForTokens": {
+      "caller": "{caller}",
+      "value": "0",
+      "args": {
+        "typeof path === \"string\"": null
+      }
+    },
+    "swapTokensForExactTokens": {
+      "caller": "{caller}",
+      "value": "0",
+      "args": {
+        "typeof path === \"string\"": null
+      }
+    },
+    "swapExactNASForTokens": {
+      "caller": "{caller}",
+      "value": "0",
+      "args": {
+        "amountOutMin": null,
+        "path": null,
+        "toAddress": null
+      }
+    },
+    "swapTokensForExactNAS": {
+      "caller": "{caller}",
+      "value": "0",
+      "args": {
+        "amountOut": null,
+        "amountInMax": null,
+        "path": null,
+        "toAddress": null
+      }
+    },
+    "swapExactTokensForNAS": {
+      "caller": "{caller}",
+      "value": "0",
+      "args": {
+        "amountIn": null,
+        "amountOutMin": null,
+        "path": null,
+        "toAddress": null
+      }
+    },
+    "swapNASForExactTokens": {
+      "caller": "{caller}",
+      "value": "0",
+      "args": {
+        "amountOut": null,
+        "path": null,
+        "toAddress": null
+      }
+    },
+    "getAmountOut": {
+      "caller": "{caller}",
+      "value": "0",
+      "args": {
+        "amountIn": null,
+        "reserveIn": null,
+        "reserveOut": null
+      }
+    },
+    "getAmountIn": {
+      "caller": "{caller}",
+      "value": "0",
+      "args": {
+        "amountOut": null,
+        "reserveIn": null,
+        "reserveOut": null
+      }
+    },
+    "getAmountsOut": {
+      "caller": "{caller}",
+      "value": "0",
+      "args": {
+        "amountIn": null,
+        "path": null
+      }
+    },
+    "getAmountsIn": {
+      "caller": "{caller}",
+      "value": "0",
+      "args": {
+        "amountOut": null,
+        "path": null
+      }
+    }
+  }
+}
