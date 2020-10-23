@@ -9,10 +9,10 @@ FNAX
 n1kQjF3SckakpdoDQsXFbdZLSjRpvRuxwiC
 
 SWAP
-n1fhAhD7yQcJkiTpwVBZey7JrMBvHCXjxuE
+n1hhJ1VhY5ASuRtchRD9h9oWUxyaNcBi7mC
 
 LP
-n1qwk6nPQTTVAN5ADQTsSrMXSAAXYFPxi7c
+n1iShkCnLwQnk9xpVUgRDAS8SAdFLYBstoi
 
 
 # Steps to add a new trading pair

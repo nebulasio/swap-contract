@@ -15,9 +15,6 @@ pairName => {
   lp: lp
 }
 
-# allPairs
-chunkIndex => [pairName]
-
 */
 
 const MINIMUM_LIQUIDITY = 1000;
@@ -115,13 +112,7 @@ Swap.prototype = {
   },
 
   allPairs: function () {
-    let index = 0;
-    let res = [];
-    while (storage.mapHas("allPairs", index.toString())) {
-      res = res.concat(JSON.parse(storage.mapGet("allPairs", index.toString())));
-      ++index;
-    }
-    return res;
+    return this._allPairs;
   },
 
   createPair: function (token0, token1, lp) {
