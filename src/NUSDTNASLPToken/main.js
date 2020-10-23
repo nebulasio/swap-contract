@@ -1,4 +1,12 @@
-"use strict";
+/** Local simulation environment code; Do not modify */
+const neblocal = require('../../lib/neblocal')
+const crypto = require('../../lib/crypto')
+const BigNumber = require('bignumber.js')
+const Blockchain = neblocal.Blockchain
+const LocalContractStorage = neblocal.LocalContractStorage
+const Event = neblocal.Event
+/** Local simulation environment code; End. */
+
 
 var Allowed = function (obj) {
     this.allowed = {};
@@ -28,7 +36,10 @@ Allowed.prototype = {
     }
 }
 
-var FakeNAX = function () {
+var NUSDTNASLPToken = function () {
+
+    this.__contractName = 'NUSDTNASLPToken';
+
     LocalContractStorage.defineProperties(this, {
         _swap: null,
         _name: null,
@@ -64,25 +75,34 @@ var FakeNAX = function () {
     });
 };
 
-FakeNAX.prototype = {
+NUSDTNASLPToken.prototype = {
 
-    init: function () {
+    init: function (swap, name, symbol, decimals) {
+        this._swap = swap;
+        this._name = name;
+        this._symbol = symbol;
+        this._decimals = decimals || 18;
         this._totalSupply = new BigNumber(0);
+    },
+
+    // Returns the swap contract address
+    swap: function () {
+        return this._swap;
     },
 
     // Returns the name of the token
     name: function () {
-        return "Fake NAX";
+        return this._name;
     },
 
     // Returns the symbol of the token
     symbol: function () {
-        return "NAX";
+        return this._symbol;
     },
 
     // Returns the number of decimals the token uses
     decimals: function () {
-        return 18;
+        return this._decimals;
     },
 
     totalSupply: function () {
@@ -99,12 +119,63 @@ FakeNAX.prototype = {
         }
     },
 
-    mint: function (value) {
+    mint: function (to, value) {
+        if (Blockchain.transaction.from != this._swap) {
+            throw new Error("only swap can mint.");
+        }
+
+        value = new BigNumber(value);
+        if (value.lt(0)) {
+            throw new Error("invalid value.");
+        }
+
+        var toBalance = this.balances.get(to) || new BigNumber(0);
+        this.balances.set(to, toBalance.plus(value));
+        this._totalSupply = this._totalSupply.plus(value);
+
+        this._transferEvent(true, Blockchain.transaction.to, to, value);
+    },
+
+    burn: function (value) {
+        value = new BigNumber(value);
+        if (value.lt(0)) {
+            throw new Error("invalid value.");
+        }
+
         var from = Blockchain.transaction.from;
         var balance = this.balances.get(from) || new BigNumber(0);
-        
-        this.balances.set(from, balance.plus(value));
-        this._totalSupply = this._totalSupply.plus(value);
+
+        if (balance.lt(value)) {
+            throw new Error("transfer failed.");
+        }
+
+        this.balances.set(from, balance.minus(value));
+        this._totalSupply = this._totalSupply.minus(value);
+
+        this._transferEvent(true, from, Blockchain.transaction.to, value);
+    },
+
+    burnFrom: function (from, value) {
+        var spender = Blockchain.transaction.from;
+        var balance = this.balances.get(from) || new BigNumber(0);
+
+        var allowed = this.allowed.get(from) || new Allowed();
+        var allowedValue = allowed.get(spender) || new BigNumber(0);
+        value = new BigNumber(value);
+
+        if (value.gte(0) && balance.gte(value) && allowedValue.gte(value)) {
+
+            this.balances.set(from, balance.minus(value));
+            this._totalSupply = this._totalSupply.minus(value);
+
+            // update allowed value
+            allowed.set(spender, allowedValue.minus(value));
+            this.allowed.set(from, allowed);
+
+            this._transferEvent(true, from, Blockchain.transaction.to, value);
+        } else {
+            throw new Error("transfer failed.");
+        }
     },
 
     transfer: function (to, value) {
@@ -210,4 +281,4 @@ FakeNAX.prototype = {
     }
 };
 
-module.exports = FakeNAX;
+module.exports = NUSDTNASLPToken;

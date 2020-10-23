@@ -1,0 +1,85 @@
+{
+  "allMethods": [
+    "name",
+    "symbol",
+    "decimals",
+    "totalSupply",
+    "balanceOf",
+    "mint",
+    "transfer",
+    "transferFrom",
+    "approve",
+    "allowance"
+  ],
+  "testMethods": [],
+  "params": {
+    "name": {
+      "caller": "{caller}",
+      "value": "0",
+      "args": {}
+    },
+    "symbol": {
+      "caller": "{caller}",
+      "value": "0",
+      "args": {}
+    },
+    "decimals": {
+      "caller": "{caller}",
+      "value": "0",
+      "args": {}
+    },
+    "totalSupply": {
+      "caller": "{caller}",
+      "value": "0",
+      "args": {}
+    },
+    "balanceOf": {
+      "caller": "{caller}",
+      "value": "0",
+      "args": {
+        "owner": null
+      }
+    },
+    "mint": {
+      "caller": "{caller}",
+      "value": "0",
+      "args": {
+        "value": null
+      }
+    },
+    "transfer": {
+      "caller": "{caller}",
+      "value": "0",
+      "args": {
+        "to": null,
+        "value": null
+      }
+    },
+    "transferFrom": {
+      "caller": "{caller}",
+      "value": "0",
+      "args": {
+        "from": null,
+        "to": null,
+        "value": null
+      }
+    },
+    "approve": {
+      "caller": "{caller}",
+      "value": "0",
+      "args": {
+        "spender": null,
+        "currentValue": null,
+        "value": null
+      }
+    },
+    "allowance": {
+      "caller": "{caller}",
+      "value": "0",
+      "args": {
+        "owner": null,
+        "spender": null
+      }
+    }
+  }
+}

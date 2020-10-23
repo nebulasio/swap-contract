@@ -56,42 +56,67 @@
       "caller": "{caller}",
       "value": "0",
       "args": {
-        "amountADesired": null
+        "tokenA": null,
+        "tokenB": null,
+        "amountADesired": null,
+        "amountBDesired": null,
+        "amountAMin": null,
+        "amountBMin": null,
+        "toAddress": null
       }
     },
     "addLiquidityNAS": {
       "caller": "{caller}",
       "value": "0",
       "args": {
-        "amountTokenDesired": null
+        "token": null,
+        "amountTokenDesired": null,
+        "amountTokenMin": null,
+        "amountNASMin": null,
+        "toAddress": null
       }
     },
     "removeLiquidity": {
       "caller": "{caller}",
       "value": "0",
       "args": {
-        "liquidity": null
+        "tokenA": null,
+        "tokenB": null,
+        "liquidity": null,
+        "amountAMin": null,
+        "amountBMin": null,
+        "toAddress": null
       }
     },
     "removeLiquidityNAS": {
       "caller": "{caller}",
       "value": "0",
       "args": {
-        "token": null
+        "token": null,
+        "liquidity": null,
+        "amountTokenMin": null,
+        "amountNASMin": null,
+        "toAddress": null
       }
     },
     "swapExactTokensForTokens": {
       "caller": "{caller}",
       "value": "0",
       "args": {
-        "typeof path === \"string\"": null
+        "amountIn": null,
+        "amountOutMin": null,
+        "path": null,
+        "toAddress": null
       }
     },
     "swapTokensForExactTokens": {
       "caller": "{caller}",
       "value": "0",
       "args": {
-        "typeof path === \"string\"": null
+        "amountOut": null,
+        "amountInMax": null,
+        "path": null,
+        "toAddress": null
       }
     },
     "swapExactNASForTokens": {

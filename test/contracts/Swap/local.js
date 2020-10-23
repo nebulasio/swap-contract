@@ -34,28 +34,28 @@ class _Local extends _LocalBase {
         return this._call(Swap, 'quote', this._value, [amountADesired, reserveA, reserveB])
     }
 
-    addLiquidity(amountADesired) {
-        return this._call(Swap, 'addLiquidity', this._value, [amountADesired])
+    addLiquidity(tokenA, tokenB, amountADesired, amountBDesired, amountAMin, amountBMin, toAddress) {
+        return this._call(Swap, 'addLiquidity', this._value, [tokenA, tokenB, amountADesired, amountBDesired, amountAMin, amountBMin, toAddress])
     }
 
-    addLiquidityNAS(amountTokenDesired) {
-        return this._call(Swap, 'addLiquidityNAS', this._value, [amountTokenDesired])
+    addLiquidityNAS(token, amountTokenDesired, amountTokenMin, amountNASMin, toAddress) {
+        return this._call(Swap, 'addLiquidityNAS', this._value, [token, amountTokenDesired, amountTokenMin, amountNASMin, toAddress])
     }
 
-    removeLiquidity(liquidity) {
-        return this._call(Swap, 'removeLiquidity', this._value, [liquidity])
+    removeLiquidity(tokenA, tokenB, liquidity, amountAMin, amountBMin, toAddress) {
+        return this._call(Swap, 'removeLiquidity', this._value, [tokenA, tokenB, liquidity, amountAMin, amountBMin, toAddress])
     }
 
-    removeLiquidityNAS(token) {
-        return this._call(Swap, 'removeLiquidityNAS', this._value, [token])
+    removeLiquidityNAS(token, liquidity, amountTokenMin, amountNASMin, toAddress) {
+        return this._call(Swap, 'removeLiquidityNAS', this._value, [token, liquidity, amountTokenMin, amountNASMin, toAddress])
     }
 
-    swapExactTokensForTokens(typeof path === "string") {
-        return this._call(Swap, 'swapExactTokensForTokens', this._value, [typeof path === "string"])
+    swapExactTokensForTokens(amountIn, amountOutMin, path, toAddress) {
+        return this._call(Swap, 'swapExactTokensForTokens', this._value, [amountIn, amountOutMin, path, toAddress])
     }
 
-    swapTokensForExactTokens(typeof path === "string") {
-        return this._call(Swap, 'swapTokensForExactTokens', this._value, [typeof path === "string"])
+    swapTokensForExactTokens(amountOut, amountInMax, path, toAddress) {
+        return this._call(Swap, 'swapTokensForExactTokens', this._value, [amountOut, amountInMax, path, toAddress])
     }
 
     swapExactNASForTokens(amountOutMin, path, toAddress) {

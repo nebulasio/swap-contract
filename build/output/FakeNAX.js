@@ -82,7 +82,7 @@ FakeNAX.prototype = {
     },
 
     decimals: function () {
-        return 18;
+        return 9;
     },
 
     totalSupply: function () {

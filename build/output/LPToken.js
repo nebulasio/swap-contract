@@ -74,7 +74,7 @@ LPToken.prototype = {
         this._swap = swap;
         this._name = name;
         this._symbol = symbol;
-        this._decimals = decimals || 0;
+        this._decimals = decimals || 18;
         this._totalSupply = new BigNumber(0);
     },
 

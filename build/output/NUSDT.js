@@ -1,11 +1,5 @@
-/** Local simulation environment code; Do not modify */
-const neblocal = require('../../lib/neblocal')
-const crypto = require('../../lib/crypto')
-const BigNumber = require('bignumber.js')
-const Blockchain = neblocal.Blockchain
-const LocalContractStorage = neblocal.LocalContractStorage
-const Event = neblocal.Event
-/** Local simulation environment code; End. */
+const crypto = require('crypto.js')
+
 
 var Allowed = function (obj) {
     this.allowed = {};
@@ -35,9 +29,9 @@ Allowed.prototype = {
     }
 }
 
-var FakeNAX = function () {
+var NUSDT = function () {
     
-    this.__contractName = 'FakeNAX';
+    this.__contractName = 'NUSDT';
 
     LocalContractStorage.defineProperties(this, {
         _swap: null,
@@ -74,25 +68,22 @@ var FakeNAX = function () {
     });
 };
 
-FakeNAX.prototype = {
+NUSDT.prototype = {
 
     init: function () {
         this._totalSupply = new BigNumber(0);
     },
 
-    // Returns the name of the token
     name: function () {
-        return "Fake NAX";
+        return "nUSDT";
     },
 
-    // Returns the symbol of the token
     symbol: function () {
-        return "NAX";
+        return "nUSDT";
     },
 
-    // Returns the number of decimals the token uses
     decimals: function () {
-        return 9;
+        return 6;
     },
 
     totalSupply: function () {
@@ -149,7 +140,6 @@ FakeNAX.prototype = {
 
             this.balances.set(from, balance.minus(value));
 
-            // update allowed value
             allowed.set(spender, allowedValue.minus(value));
             this.allowed.set(from, allowed);
 
@@ -220,4 +210,4 @@ FakeNAX.prototype = {
     }
 };
 
-module.exports = FakeNAX;
+module.exports = NUSDT;

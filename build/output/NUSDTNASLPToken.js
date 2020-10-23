@@ -1,4 +1,5 @@
-"use strict";
+const crypto = require('crypto.js')
+
 
 var Allowed = function (obj) {
     this.allowed = {};
@@ -28,7 +29,10 @@ Allowed.prototype = {
     }
 }
 
-var WNAS = function () {
+var NUSDTNASLPToken = function () {
+
+    this.__contractName = 'NUSDTNASLPToken';
+
     LocalContractStorage.defineProperties(this, {
         _swap: null,
         _name: null,
@@ -64,25 +68,30 @@ var WNAS = function () {
     });
 };
 
-WNAS.prototype = {
+NUSDTNASLPToken.prototype = {
 
-    init: function () {
+    init: function (swap, name, symbol, decimals) {
+        this._swap = swap;
+        this._name = name;
+        this._symbol = symbol;
+        this._decimals = decimals || 18;
         this._totalSupply = new BigNumber(0);
     },
 
-    // Returns the name of the token
+    swap: function () {
+        return this._swap;
+    },
+
     name: function () {
-        return "Wrapped NAS";
+        return this._name;
     },
 
-    // Returns the symbol of the token
     symbol: function () {
-        return "WNAS";
+        return this._symbol;
     },
 
-    // Returns the number of decimals the token uses
     decimals: function () {
-        return 18;
+        return this._decimals;
     },
 
     totalSupply: function () {
@@ -99,28 +108,24 @@ WNAS.prototype = {
         }
     },
 
-    deposit: function () {
-        var from = Blockchain.transaction.from;
-        var value = Blockchain.transaction.value;
-        var balance = this.balances.get(from) || new BigNumber(0);
-        
-        this.balances.set(from, balance.plus(value));
+    mint: function (to, value) {
+        if (Blockchain.transaction.from != this._swap) {
+            throw new Error("only swap can mint.");
+        }
+
+        value = new BigNumber(value);
+        if (value.lt(0)) {
+            throw new Error("invalid value.");
+        }
+
+        var toBalance = this.balances.get(to) || new BigNumber(0);
+        this.balances.set(to, toBalance.plus(value));
         this._totalSupply = this._totalSupply.plus(value);
 
-        this._depositEvent(true, from, value);
+        this._transferEvent(true, Blockchain.transaction.to, to, value);
     },
 
-    _depositEvent: function (status, from, value) {
-        Event.Trigger(this.name(), {
-            Status: status,
-            Deposit: {
-                from: from,
-                value: value
-            }
-        });
-    },
-
-    withdraw: function (value) {
+    burn: function (value) {
         value = new BigNumber(value);
         if (value.lt(0)) {
             throw new Error("invalid value.");
@@ -130,24 +135,35 @@ WNAS.prototype = {
         var balance = this.balances.get(from) || new BigNumber(0);
 
         if (balance.lt(value)) {
-            throw new Error("withdraw failed.");
+            throw new Error("transfer failed.");
         }
 
         this.balances.set(from, balance.minus(value));
-        Blockchain.transfer(from, value);
         this._totalSupply = this._totalSupply.minus(value);
 
-        this._withdrawEvent(true, from, value);
+        this._transferEvent(true, from, Blockchain.transaction.to, value);
     },
 
-    _withdrawEvent: function (status, from, value) {
-        Event.Trigger(this.name(), {
-            Status: status,
-            Withdraw: {
-                from: from,
-                value: value
-            }
-        });
+    burnFrom: function (from, value) {
+        var spender = Blockchain.transaction.from;
+        var balance = this.balances.get(from) || new BigNumber(0);
+
+        var allowed = this.allowed.get(from) || new Allowed();
+        var allowedValue = allowed.get(spender) || new BigNumber(0);
+        value = new BigNumber(value);
+
+        if (value.gte(0) && balance.gte(value) && allowedValue.gte(value)) {
+
+            this.balances.set(from, balance.minus(value));
+            this._totalSupply = this._totalSupply.minus(value);
+
+            allowed.set(spender, allowedValue.minus(value));
+            this.allowed.set(from, allowed);
+
+            this._transferEvent(true, from, Blockchain.transaction.to, value);
+        } else {
+            throw new Error("transfer failed.");
+        }
     },
 
     transfer: function (to, value) {
@@ -182,7 +198,6 @@ WNAS.prototype = {
 
             this.balances.set(from, balance.minus(value));
 
-            // update allowed value
             allowed.set(spender, allowedValue.minus(value));
             this.allowed.set(from, allowed);
 
@@ -253,4 +268,4 @@ WNAS.prototype = {
     }
 };
 
-module.exports = WNAS;
+module.exports = NUSDTNASLPToken;

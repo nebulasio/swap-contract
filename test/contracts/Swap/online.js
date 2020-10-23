@@ -104,97 +104,97 @@ class Online extends OnlineBase {
         }
     }
 
-    async addLiquidityTest(amountADesired) {
+    async addLiquidityTest(tokenA, tokenB, amountADesired, amountBDesired, amountAMin, amountBMin, toAddress) {
         try {
-            return this._testResult(await this.nebUtil.callTest(this._account.getAddressString(), this._contractAddress, this._value, 'addLiquidity', [amountADesired]))
+            return this._testResult(await this.nebUtil.callTest(this._account.getAddressString(), this._contractAddress, this._value, 'addLiquidity', [tokenA, tokenB, amountADesired, amountBDesired, amountAMin, amountBMin, toAddress]))
         } finally {
             this._reset()
         }
     }
 
-    async addLiquidity(amountADesired) {
+    async addLiquidity(tokenA, tokenB, amountADesired, amountBDesired, amountAMin, amountBMin, toAddress) {
         try {
-            return await this._getTxResult('Swap.addLiquidity', await this.nebUtil.oneKeyCall(this._account, this._contractAddress, this._value, 'addLiquidity', [amountADesired]))
+            return await this._getTxResult('Swap.addLiquidity', await this.nebUtil.oneKeyCall(this._account, this._contractAddress, this._value, 'addLiquidity', [tokenA, tokenB, amountADesired, amountBDesired, amountAMin, amountBMin, toAddress]))
         } finally {
             this._reset()
         }
     }
 
-    async addLiquidityNASTest(amountTokenDesired) {
+    async addLiquidityNASTest(token, amountTokenDesired, amountTokenMin, amountNASMin, toAddress) {
         try {
-            return this._testResult(await this.nebUtil.callTest(this._account.getAddressString(), this._contractAddress, this._value, 'addLiquidityNAS', [amountTokenDesired]))
+            return this._testResult(await this.nebUtil.callTest(this._account.getAddressString(), this._contractAddress, this._value, 'addLiquidityNAS', [token, amountTokenDesired, amountTokenMin, amountNASMin, toAddress]))
         } finally {
             this._reset()
         }
     }
 
-    async addLiquidityNAS(amountTokenDesired) {
+    async addLiquidityNAS(token, amountTokenDesired, amountTokenMin, amountNASMin, toAddress) {
         try {
-            return await this._getTxResult('Swap.addLiquidityNAS', await this.nebUtil.oneKeyCall(this._account, this._contractAddress, this._value, 'addLiquidityNAS', [amountTokenDesired]))
+            return await this._getTxResult('Swap.addLiquidityNAS', await this.nebUtil.oneKeyCall(this._account, this._contractAddress, this._value, 'addLiquidityNAS', [token, amountTokenDesired, amountTokenMin, amountNASMin, toAddress]))
         } finally {
             this._reset()
         }
     }
 
-    async removeLiquidityTest(liquidity) {
+    async removeLiquidityTest(tokenA, tokenB, liquidity, amountAMin, amountBMin, toAddress) {
         try {
-            return this._testResult(await this.nebUtil.callTest(this._account.getAddressString(), this._contractAddress, this._value, 'removeLiquidity', [liquidity]))
+            return this._testResult(await this.nebUtil.callTest(this._account.getAddressString(), this._contractAddress, this._value, 'removeLiquidity', [tokenA, tokenB, liquidity, amountAMin, amountBMin, toAddress]))
         } finally {
             this._reset()
         }
     }
 
-    async removeLiquidity(liquidity) {
+    async removeLiquidity(tokenA, tokenB, liquidity, amountAMin, amountBMin, toAddress) {
         try {
-            return await this._getTxResult('Swap.removeLiquidity', await this.nebUtil.oneKeyCall(this._account, this._contractAddress, this._value, 'removeLiquidity', [liquidity]))
+            return await this._getTxResult('Swap.removeLiquidity', await this.nebUtil.oneKeyCall(this._account, this._contractAddress, this._value, 'removeLiquidity', [tokenA, tokenB, liquidity, amountAMin, amountBMin, toAddress]))
         } finally {
             this._reset()
         }
     }
 
-    async removeLiquidityNASTest(token) {
+    async removeLiquidityNASTest(token, liquidity, amountTokenMin, amountNASMin, toAddress) {
         try {
-            return this._testResult(await this.nebUtil.callTest(this._account.getAddressString(), this._contractAddress, this._value, 'removeLiquidityNAS', [token]))
+            return this._testResult(await this.nebUtil.callTest(this._account.getAddressString(), this._contractAddress, this._value, 'removeLiquidityNAS', [token, liquidity, amountTokenMin, amountNASMin, toAddress]))
         } finally {
             this._reset()
         }
     }
 
-    async removeLiquidityNAS(token) {
+    async removeLiquidityNAS(token, liquidity, amountTokenMin, amountNASMin, toAddress) {
         try {
-            return await this._getTxResult('Swap.removeLiquidityNAS', await this.nebUtil.oneKeyCall(this._account, this._contractAddress, this._value, 'removeLiquidityNAS', [token]))
+            return await this._getTxResult('Swap.removeLiquidityNAS', await this.nebUtil.oneKeyCall(this._account, this._contractAddress, this._value, 'removeLiquidityNAS', [token, liquidity, amountTokenMin, amountNASMin, toAddress]))
         } finally {
             this._reset()
         }
     }
 
-    async swapExactTokensForTokensTest(typeof path === "string") {
+    async swapExactTokensForTokensTest(amountIn, amountOutMin, path, toAddress) {
         try {
-            return this._testResult(await this.nebUtil.callTest(this._account.getAddressString(), this._contractAddress, this._value, 'swapExactTokensForTokens', [typeof path === "string"]))
+            return this._testResult(await this.nebUtil.callTest(this._account.getAddressString(), this._contractAddress, this._value, 'swapExactTokensForTokens', [amountIn, amountOutMin, path, toAddress]))
         } finally {
             this._reset()
         }
     }
 
-    async swapExactTokensForTokens(typeof path === "string") {
+    async swapExactTokensForTokens(amountIn, amountOutMin, path, toAddress) {
         try {
-            return await this._getTxResult('Swap.swapExactTokensForTokens', await this.nebUtil.oneKeyCall(this._account, this._contractAddress, this._value, 'swapExactTokensForTokens', [typeof path === "string"]))
+            return await this._getTxResult('Swap.swapExactTokensForTokens', await this.nebUtil.oneKeyCall(this._account, this._contractAddress, this._value, 'swapExactTokensForTokens', [amountIn, amountOutMin, path, toAddress]))
         } finally {
             this._reset()
         }
     }
 
-    async swapTokensForExactTokensTest(typeof path === "string") {
+    async swapTokensForExactTokensTest(amountOut, amountInMax, path, toAddress) {
         try {
-            return this._testResult(await this.nebUtil.callTest(this._account.getAddressString(), this._contractAddress, this._value, 'swapTokensForExactTokens', [typeof path === "string"]))
+            return this._testResult(await this.nebUtil.callTest(this._account.getAddressString(), this._contractAddress, this._value, 'swapTokensForExactTokens', [amountOut, amountInMax, path, toAddress]))
         } finally {
             this._reset()
         }
     }
 
-    async swapTokensForExactTokens(typeof path === "string") {
+    async swapTokensForExactTokens(amountOut, amountInMax, path, toAddress) {
         try {
-            return await this._getTxResult('Swap.swapTokensForExactTokens', await this.nebUtil.oneKeyCall(this._account, this._contractAddress, this._value, 'swapTokensForExactTokens', [typeof path === "string"]))
+            return await this._getTxResult('Swap.swapTokensForExactTokens', await this.nebUtil.oneKeyCall(this._account, this._contractAddress, this._value, 'swapTokensForExactTokens', [amountOut, amountInMax, path, toAddress]))
         } finally {
             this._reset()
         }
