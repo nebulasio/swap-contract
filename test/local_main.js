@@ -26,13 +26,18 @@ async function deploy() {
     NUSDTNASLPToken._deploy(LocalContext.getContractAddress(Swap), "Nebulas nUSDT-NAS LPToken", "LP-nUSDT-NAS", 18)
     NUSDTNAXLPToken._deploy(LocalContext.getContractAddress(Swap), "Nebulas nUSDT-NAX LPToken", "LP-nUSDT-NAX", 18)
 
-    TestUtils.log("WNAS", LocalContext.getContractAddress(WNAS))
-    TestUtils.log("NUSDT", LocalContext.getContractAddress(NUSDT))
-    TestUtils.log("FakeNAX", LocalContext.getContractAddress(FakeNAX))
-    TestUtils.log("Swap", LocalContext.getContractAddress(Swap))
-    TestUtils.log("LPToken", LocalContext.getContractAddress(LPToken))
-    TestUtils.log("NUSDTNASLPToken", LocalContext.getContractAddress(NUSDTNASLPToken))
-    TestUtils.log("NUSDTNAXLPToken", LocalContext.getContractAddress(NUSDTNAXLPToken))
+
+    let addrs = {
+        WNAS: LocalContext.getContractAddress(WNAS),
+        nUSDT: LocalContext.getContractAddress(NUSDT),
+        nax: LocalContext.getContractAddress(FakeNAX),
+        swap: LocalContext.getContractAddress(Swap),
+        NASNAXLPToken: LocalContext.getContractAddress(LPToken),
+        NUSDTNASLPToken: LocalContext.getContractAddress(NUSDTNASLPToken),
+        NUSDTNAXLPToken: LocalContext.getContractAddress(NUSDTNAXLPToken)
+    }
+
+    TestUtils.log("swap addrs", addrs)
 }
 
 async function testWNAS() {
