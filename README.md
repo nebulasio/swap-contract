@@ -1,20 +1,5 @@
 # Swap Contracts
 
-Testnet Addresses:
-
-WNAS
-n1i57tzTKie48Gj1Hpa4fNPF4eFExKLGhuq
-
-FNAX
-n1kQjF3SckakpdoDQsXFbdZLSjRpvRuxwiC
-
-SWAP
-n1hhJ1VhY5ASuRtchRD9h9oWUxyaNcBi7mC
-
-LP
-n1iShkCnLwQnk9xpVUgRDAS8SAdFLYBstoi
-
-
 # Steps to add a new trading pair
 
 1) Deploy a new LP token manually

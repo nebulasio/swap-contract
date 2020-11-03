@@ -156,7 +156,7 @@ async function testSwap() {
     // 使用nas换取精确的token
     Swap._setValue(TestUtils.nas(100)).swapNASForExactTokens(
         TestUtils.usdt(1), 
-        [LocalContext.getContractAddress(WNAS), LocalContext.getContractAddress(NUSDT)], 
+        [LocalContext.getContractAddress(WNAS), LocalContext.getContractAddress(FakeNAX), LocalContext.getContractAddress(NUSDT)], 
         TestKeys.caller.getAddressString())
 }
 

@@ -24,7 +24,7 @@ const TestUtils = require('./utils.js')
 
 async function deploy() {
     await WNAS._deploy()
-    await NUSDT._deploy()
+    // await NUSDT._deploy()
     await FakeNAX._deploy()
     await Swap._deploy(ConfigManager.getOnlineContractAddress(WNAS))
     await LPToken._deploy(ConfigManager.getOnlineContractAddress(Swap), "Nebulas NAS-NAX LPToken", "LP-NAS-NAX", 18)
@@ -56,48 +56,48 @@ async function testPair() {
 async function testAddLiquidity() {
     TestUtils.log("addLiquidity")
     //nas-nax
-    let naxValue = TestUtils.nax(10000000)
+    let naxValue = TestUtils.nax(100000000)
     await FakeNAX.mint(naxValue)
     await FakeNAX.approve(ConfigManager.getOnlineContractAddress(Swap), 0, naxValue)
-    await Swap._setValue(TestUtils.nas(10)).addLiquidityNAS(
+    await Swap._setValue(TestUtils.nas(1000)).addLiquidityNAS(
         ConfigManager.getOnlineContractAddress(FakeNAX), 
-        TestUtils.nax(100), 
-        TestUtils.nax(10), 
-        TestUtils.nas(1), 
+        TestUtils.nax(135000), 
+        TestUtils.nax(13500), 
+        TestUtils.nas(100), 
         TestKeys.caller.getAddressString())
 
-    let wnasValue = TestUtils.nas(10)
-    await WNAS._setValue(wnasValue).deposit()
-    let allowance = await WNAS.allowanceTest(TestKeys.caller.getAddressString(), ConfigManager.getOnlineContractAddress(Swap))
-    await WNAS.approve(ConfigManager.getOnlineContractAddress(Swap), allowance, wnasValue)
-    await Swap.addLiquidity(
-        ConfigManager.getOnlineContractAddress(WNAS),
-        ConfigManager.getOnlineContractAddress(FakeNAX), 
-        wnasValue, 
-        TestUtils.nax(100), 
-        TestUtils.nas(1), 
-        TestUtils.nax(10),
-        TestKeys.caller.getAddressString())
+    // let wnasValue = TestUtils.nas(10)
+    // await WNAS._setValue(wnasValue).deposit()
+    // let allowance = await WNAS.allowanceTest(TestKeys.caller.getAddressString(), ConfigManager.getOnlineContractAddress(Swap))
+    // await WNAS.approve(ConfigManager.getOnlineContractAddress(Swap), allowance, wnasValue)
+    // await Swap.addLiquidity(
+    //     ConfigManager.getOnlineContractAddress(WNAS),
+    //     ConfigManager.getOnlineContractAddress(FakeNAX), 
+    //     wnasValue, 
+    //     TestUtils.nax(100), 
+    //     TestUtils.nas(1), 
+    //     TestUtils.nax(10),
+    //     TestKeys.caller.getAddressString())
 
     // nUSDT-nas
-    let nUSDTValue = TestUtils.usdt(100000)
-    await NUSDT.mint(nUSDTValue)
-    await NUSDT.approve(ConfigManager.getOnlineContractAddress(Swap), 0, nUSDTValue)
-    await Swap._setValue(TestUtils.nas(30)).addLiquidityNAS(
+    let nUSDTValue = TestUtils.usdt(10000)
+    // await NUSDT.mint(nUSDTValue)
+    await NUSDT.approve(ConfigManager.getOnlineContractAddress(Swap), '0', nUSDTValue)
+    await Swap._setValue(TestUtils.nas(1000)).addLiquidityNAS(
         ConfigManager.getOnlineContractAddress(NUSDT), 
-        TestUtils.usdt(10), 
-        TestUtils.usdt(7), 
-        TestUtils.nas(7), 
+        TestUtils.usdt(262), 
+        TestUtils.usdt(26), 
+        TestUtils.nas(100), 
         TestKeys.caller.getAddressString())
 
     // nusdt-nax
     await Swap.addLiquidity(
         ConfigManager.getOnlineContractAddress(NUSDT),
         ConfigManager.getOnlineContractAddress(FakeNAX), 
-        TestUtils.usdt(1000), 
+        TestUtils.usdt(194), 
         TestUtils.nax(100000), 
-        TestUtils.usdt(50), 
-        TestUtils.nax(9000),
+        TestUtils.usdt(19), 
+        TestUtils.nax(10000),
         TestKeys.caller.getAddressString())
 }
 
@@ -186,9 +186,20 @@ async function testRemoveLiquidity() {
         TestKeys.caller.getAddressString())
 }
 
+async function transferToken() {
+    await NUSDT.transfer('n1FBab8bN4muMJrUL3P3VLoozCeKyn4w3qs', TestUtils.usdt(1000))
+    await NUSDT.transfer('n1aNmaBsUoGpV9gQL2rciexKuWMF7cfeqWe', TestUtils.usdt(1000))
+
+    await FakeNAX.transfer('n1FBab8bN4muMJrUL3P3VLoozCeKyn4w3qs', TestUtils.nax(10000))
+    await FakeNAX.transfer('n1aNmaBsUoGpV9gQL2rciexKuWMF7cfeqWe', TestUtils.nax(10000))
+}
+
 async function main() {
     TestUtils.log("deployer", TestKeys.deployer.getAddressString())
     TestUtils.log("caller", TestKeys.caller.getAddressString())
+
+    // await transferToken()
+    // return
 
     // await deploy()
 
@@ -202,11 +213,15 @@ async function main() {
         nUSDTNAXLPToken: ConfigManager.getOnlineContractAddress(NUSDTNAXLPToken)
     }
     TestUtils.log("swap addrs", addrs)
+    await NUSDT.transfer("n1dHKZTnMA2hmocLD35UfqG6kwDQ3Uq92nS", TestUtils.usdt("1000"))
+
+    // let inAmount = await Swap.getAmountsInTest(TestUtils.usdt(0.1), [ConfigManager.getOnlineContractAddress(FakeNAX), ConfigManager.getOnlineContractAddress(NUSDT)])
+    // TestUtils.log('in', inAmount)
 
     // await testWNAS()
     // await testPair()
     // await testAddLiquidity()
-    await testSwap()
+    // await testSwap()
     // await testRemoveLiquidity()
 }
 
