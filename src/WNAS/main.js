@@ -56,7 +56,7 @@ var WNAS = function () {
     });
 
     LocalContractStorage.defineMapProperties(this, {
-        "balances": {
+        "_balances": {
             parse: function (value) {
                 return new BigNumber(value);
             },
@@ -64,7 +64,7 @@ var WNAS = function () {
                 return o.toString(10);
             }
         },
-        "allowed": {
+        "_allowed": {
             parse: function (value) {
                 return new Allowed(value);
             },
@@ -101,7 +101,7 @@ WNAS.prototype = {
     },
 
     balanceOf: function (owner) {
-        var balance = this.balances.get(owner);
+        var balance = this._balances.get(owner);
 
         if (balance instanceof BigNumber) {
             return balance.toString(10);
@@ -113,9 +113,9 @@ WNAS.prototype = {
     deposit: function () {
         var from = Blockchain.transaction.from;
         var value = Blockchain.transaction.value;
-        var balance = this.balances.get(from) || new BigNumber(0);
+        var balance = this._balances.get(from) || new BigNumber(0);
         
-        this.balances.set(from, balance.plus(value));
+        this._balances.set(from, balance.plus(value));
         this._totalSupply = this._totalSupply.plus(value);
 
         this._depositEvent(true, from, value);
@@ -132,19 +132,16 @@ WNAS.prototype = {
     },
 
     withdraw: function (value) {
-        value = new BigNumber(value);
-        if (value.lt(0)) {
-            throw new Error("invalid value.");
-        }
+        this._verifyValue(value);
 
         var from = Blockchain.transaction.from;
-        var balance = this.balances.get(from) || new BigNumber(0);
+        var balance = this._balances.get(from) || new BigNumber(0);
 
         if (balance.lt(value)) {
             throw new Error("withdraw failed.");
         }
 
-        this.balances.set(from, balance.minus(value));
+        this._balances.set(from, balance.minus(value));
         Blockchain.transfer(from, value);
         this._totalSupply = this._totalSupply.minus(value);
 
@@ -161,48 +158,65 @@ WNAS.prototype = {
         });
     },
 
-    transfer: function (to, value) {
-        value = new BigNumber(value);
-        if (value.lt(0)) {
-            throw new Error("invalid value.");
+    _verifyAddress: function (address) {
+        if (Blockchain.verifyAddress(address) === 0) {
+            throw new Error("Address format error, address=" + address);
         }
+    },
 
-        var from = Blockchain.transaction.from;
-        var balance = this.balances.get(from) || new BigNumber(0);
+    _verifyValue: function(value) {
+        let bigVal = new BigNumber(value);
+        if (bigVal.isNaN() || !bigVal.isFinite()) {
+            throw new Error("Invalid value, value=" + value);
+        }
+        if (bigVal.isNegative()) {
+            throw new Error("Value is negative, value=" + value);
+        }
+        if (!bigVal.isInteger()) {
+            throw new Error("Value is not integer, value=" + value);
+        }
+        if (value !== bigVal.toString(10)) {
+            throw new Error("Invalid value format.");
+        }
+    },
+
+    transfer: function (to, value) {
+        let from = Blockchain.transaction.from;
+        this._transferValue(from, to, value);
+    },
+
+    _transferValue: function (from, to, value) {
+        this._verifyAddress(from);
+        this._verifyAddress(to);
+        this._verifyValue(value);
+
+        value = new BigNumber(value);
+        let balance = this._balances.get(from) || new BigNumber(0);
 
         if (balance.lt(value)) {
             throw new Error("transfer failed.");
         }
 
-        this.balances.set(from, balance.minus(value));
-        var toBalance = this.balances.get(to) || new BigNumber(0);
-        this.balances.set(to, toBalance.plus(value));
+        this._balances.set(from, balance.sub(value));
+        let toBalance = this._balances.get(to) || new BigNumber(0);
+        this._balances.set(to, toBalance.add(value));
 
-        this._transferEvent(true, from, to, value);
+        this._transferEvent(true, from, to, value.toString(10));
     },
 
     transferFrom: function (from, to, value) {
-        var spender = Blockchain.transaction.from;
-        var balance = this.balances.get(from) || new BigNumber(0);
+        let spender = Blockchain.transaction.from;
+        let allowed = this._allowed.get(from) || new Allowed();
+        let allowedValue = allowed.get(spender) || new BigNumber(0);
 
-        var allowed = this.allowed.get(from) || new Allowed();
-        var allowedValue = allowed.get(spender) || new BigNumber(0);
-        value = new BigNumber(value);
-
-        if (value.gte(0) && balance.gte(value) && allowedValue.gte(value)) {
-
-            this.balances.set(from, balance.minus(value));
+        if (allowedValue.gte(value)) {
+            this._transferValue(from, to, value);
 
             // update allowed value
-            allowed.set(spender, allowedValue.minus(value));
-            this.allowed.set(from, allowed);
-
-            var toBalance = this.balances.get(to) || new BigNumber(0);
-            this.balances.set(to, toBalance.plus(value));
-
-            this._transferEvent(true, from, to, value);
+            allowed.set(spender, allowedValue.sub(value));
+            this._allowed.set(from, allowed);
         } else {
-            throw new Error("transfer failed.");
+            throw new Error("transfer allow failed.");
         }
     },
 
@@ -218,26 +232,30 @@ WNAS.prototype = {
     },
 
     approve: function (spender, currentValue, value) {
-        var from = Blockchain.transaction.from;
+        this._verifyAddress(spender);
+        this._verifyValue(currentValue);
+        this._verifyValue(value);
 
-        var oldValue = this.allowance(from, spender);
-        if (oldValue != currentValue.toString()) {
+        let from = Blockchain.transaction.from;
+
+        let oldValue = this.allowance(from, spender);
+        if (oldValue != currentValue) {
             throw new Error("current approve value mistake.");
         }
 
-        var balance = new BigNumber(this.balanceOf(from));
-        var value = new BigNumber(value);
+        let balance = new BigNumber(this.balanceOf(from));
+        value = new BigNumber(value);
 
-        if (value.lt(0) || balance.lt(value)) {
+        if (balance.lt(value)) {
             throw new Error("invalid value.");
         }
 
-        var owned = this.allowed.get(from) || new Allowed();
+        let owned = this._allowed.get(from) || new Allowed();
         owned.set(spender, value);
 
-        this.allowed.set(from, owned);
+        this._allowed.set(from, owned);
 
-        this._approveEvent(true, from, spender, value);
+        this._approveEvent(true, from, spender, value.toString(10));
     },
 
     _approveEvent: function (status, from, spender, value) {
@@ -252,12 +270,14 @@ WNAS.prototype = {
     },
 
     allowance: function (owner, spender) {
-        var owned = this.allowed.get(owner);
+        this._verifyAddress(owner);
+        this._verifyAddress(spender);
 
+        let owned = this._allowed.get(owner);
         if (owned instanceof Allowed) {
-            var spender = owned.get(spender);
-            if (typeof spender != "undefined") {
-                return spender.toString(10);
+            let spenderObj = owned.get(spender);
+            if (typeof spenderObj != "undefined") {
+                return spenderObj.toString(10);
             }
         }
         return "0";

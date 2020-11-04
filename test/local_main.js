@@ -49,6 +49,12 @@ async function testWNAS() {
     WNAS.withdraw(TestUtils.nas(10))
     TestUtils.log('WNAS totalSupply', WNAS.totalSupply())
     TestUtils.log('WNAS balance', WNAS.balanceOf(TestKeys.caller.getAddressString()))
+
+    WNAS.transfer(TestKeys.caller.getAddressString(), TestUtils.nas(10))
+    WNAS.approve(TestKeys.deployer.getAddressString(), '0', TestUtils.nas(10))
+    TestUtils.log('WNAS allowance before', WNAS.allowance(TestKeys.caller.getAddressString(), TestKeys.deployer.getAddressString()))
+    WNAS._setAccount(TestKeys.deployer).transferFrom(TestKeys.caller.getAddressString(), TestKeys.otherKeys[0].getAddressString(), TestUtils.nas(10))
+    TestUtils.log('WNAS allowance after', WNAS.allowance(TestKeys.caller.getAddressString(), TestKeys.deployer.getAddressString()))
 }
 
 async function testPair() {
@@ -72,8 +78,8 @@ async function testAddLiquidity() {
     TestUtils.log("addLiquidity")
     //nas-nax
     let naxValue = TestUtils.nax(10000000)
-    FakeNAX.mint(naxValue)
-    FakeNAX.approve(LocalContext.getContractAddress(Swap), 0, naxValue)
+    FakeNAX.mint(TestKeys.caller.getAddressString(), naxValue)
+    FakeNAX.approve(LocalContext.getContractAddress(Swap), '0', naxValue)
     Swap._setValue(TestUtils.nas(100)).addLiquidityNAS(
         LocalContext.getContractAddress(FakeNAX), 
         TestUtils.nax(10000), 
@@ -96,8 +102,8 @@ async function testAddLiquidity() {
 
     // nUSDT-nas
     let nUSDTValue = TestUtils.usdt(100000)
-    NUSDT.mint(nUSDTValue)
-    NUSDT.approve(LocalContext.getContractAddress(Swap), 0, nUSDTValue)
+    NUSDT.mint(TestKeys.caller.getAddressString(), nUSDTValue)
+    NUSDT.approve(LocalContext.getContractAddress(Swap), '0', nUSDTValue)
     Swap._setValue(TestUtils.nas(3000)).addLiquidityNAS(
         LocalContext.getContractAddress(NUSDT), 
         TestUtils.usdt(1000), 
@@ -114,6 +120,13 @@ async function testAddLiquidity() {
         TestUtils.usdt(50), 
         TestUtils.nax(9000),
         TestKeys.caller.getAddressString())
+
+    LPToken.transfer(TestKeys.deployer.getAddressString(), '0', "10000")
+    TestUtils.log('lp balance ', LPToken.balanceOf(TestKeys.caller.getAddressString()))
+    LPToken.approve(TestKeys.deployer.getAddressString(), '0', "10000")
+    TestUtils.log('lp allowance ', LPToken.allowance(TestKeys.caller.getAddressString(), TestKeys.deployer.getAddressString()))
+    LPToken._setAccount(TestKeys.deployer).transferFrom(TestKeys.caller.getAddressString(), TestKeys.otherKeys[0].getAddressString(), "10000")
+    TestUtils.log('lp allowance ', LPToken.allowance(TestKeys.caller.getAddressString(), TestKeys.deployer.getAddressString()))
 }
 
 async function testSwap() {
@@ -154,9 +167,9 @@ async function testSwap() {
         TestKeys.caller.getAddressString())
 
     // 使用nas换取精确的token
-    Swap._setValue(TestUtils.nas(100)).swapNASForExactTokens(
+    Swap._setValue(TestUtils.nas(10)).swapNASForExactTokens(
         TestUtils.usdt(1), 
-        [LocalContext.getContractAddress(WNAS), LocalContext.getContractAddress(FakeNAX), LocalContext.getContractAddress(NUSDT)], 
+        [LocalContext.getContractAddress(WNAS), LocalContext.getContractAddress(NUSDT)], 
         TestKeys.caller.getAddressString())
 }
 
@@ -164,7 +177,7 @@ async function testRemoveLiquidity() {
     TestUtils.log("removeLiquidity")
     // remove Liquidity
     let liquidity = LPToken.balanceOf(TestKeys.caller.getAddressString())
-    LPToken.approve(LocalContext.getContractAddress(Swap), 0, liquidity)
+    LPToken.approve(LocalContext.getContractAddress(Swap), '0', liquidity)
     Swap.removeLiquidityNAS(
         LocalContext.getContractAddress(FakeNAX), 
         liquidity, 
@@ -185,7 +198,7 @@ async function testRemoveLiquidity() {
 
     // remove nUSDT nax
     liquidity = NUSDTNAXLPToken.balanceOf(TestKeys.caller.getAddressString())
-    NUSDTNAXLPToken.approve(LocalContext.getContractAddress(Swap), 0, liquidity)
+    NUSDTNAXLPToken.approve(LocalContext.getContractAddress(Swap), '0', liquidity)
     Swap.removeLiquidity(
         LocalContext.getContractAddress(FakeNAX), 
         LocalContext.getContractAddress(NUSDT), 

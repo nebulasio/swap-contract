@@ -51,8 +51,8 @@ var Swap = function () {
         createdTime: obj.createdTime,
         token0: obj.token0,
         token1: obj.token1,
-        reserve0: obj.reserve0.toString(),
-        reserve1: obj.reserve1.toString(),
+        reserve0: obj.reserve0.toString(10),
+        reserve1: obj.reserve1.toString(10),
         blockTimestampLast: obj.blockTimestampLast,
         price0CumulativeLast: obj.price0CumulativeLast.toString(), 
         price1CumulativeLast: obj.price1CumulativeLast.toString(), 
@@ -88,6 +88,35 @@ Swap.prototype = {
     this._allPairs = [];
   },
 
+  _verifyPermission: function () {
+    if (Blockchain.transaction.from != this._owner) {
+        throw new Error("only owner has permission.");
+    }
+},
+
+  _verifyAddress: function (address) {
+    if (Blockchain.verifyAddress(address) === 0) {
+        throw new Error("Address format error, address=" + address);
+    }
+  },
+
+  _verifyValue: function(value) {
+      let bigVal = new BigNumber(value);
+      if (bigVal.isNaN() || !bigVal.isFinite()) {
+          throw new Error("Invalid value, value=" + value);
+      }
+      if (bigVal.isNegative()) {
+          throw new Error("Value is negative, value=" + value);
+      }
+      if (!bigVal.isInteger()) {
+          throw new Error("Value is not integer, value=" + value);
+      }
+      if (value !== bigVal.toString(10)) {
+          throw new Error("Invalid value format.");
+      }
+  },
+
+
   _setPair: function (pairName, pair) {
     this.pairInfo.set(pairName, pair);
   },
@@ -116,6 +145,9 @@ Swap.prototype = {
   },
 
   getPair: function (token0, token1) {
+    this._verifyAddress(token0);
+    this._verifyAddress(token1);
+
     const pairName = this._getPairName(token0, token1);
     return this._getPair(pairName);
   },
@@ -125,20 +157,11 @@ Swap.prototype = {
   },
 
   createPair: function (token0, token1, lp) {
-    if (Blockchain.transaction.from != this._owner) {
-      throw new Error("Only owner can create pair");
-    }
-
-    // if (Blockchain.verifyAddress(token0) != 88 ||
-    //     Blockchain.verifyAddress(token1) != 88 ||
-    //     Blockchain.verifyAddress(lp) != 88) {
-    //   throw new Error("Invalid token address");
-    // }
-    if (Blockchain.verifyAddress(token0) == 0 ||
-        Blockchain.verifyAddress(token1) == 0 ||
-        Blockchain.verifyAddress(lp) == 0) {
-      throw new Error("Invalid token address");
-    }
+    this._verifyPermission()
+    this._verifyAddress(token0);
+    this._verifyAddress(token1);
+    this._verifyAddress(token0);
+    this._verifyAddress(lp);
 
     if (token0 > token1) {
       let temp = token0;
@@ -423,7 +446,7 @@ Swap.prototype = {
     }
 
     if (reserveA.eq(0) && reserveB.eq(0)) {
-      return [amountADesired.toString(), amountBDesired.toString()];
+      return [amountADesired.toString(10), amountBDesired.toString(10)];
     } else {
       const amountBOptimal = this._quote(amountADesired, reserveA, reserveB);
       if (amountBOptimal.lte(amountBDesired)) {
@@ -443,12 +466,16 @@ Swap.prototype = {
           throw "insufficient a amount";
         }
 
-        return [amountAOptimal.toString(), amountBDesired.toString()];
+        return [amountAOptimal.toString(10), amountBDesired.toString(10)];
       }
     }
   },
 
   addLiquidity: function (tokenA, tokenB, amountADesired, amountBDesired, amountAMin, amountBMin, toAddress) {
+    this._verifyAddress(tokenA);
+    this._verifyAddress(tokenB);
+    this._verifyAddress(toAddress);
+
     amountADesired = new BigNumber(amountADesired);
     amountBDesired = new BigNumber(amountBDesired);
     amountAMin = new BigNumber(amountAMin);
@@ -464,10 +491,12 @@ Swap.prototype = {
     const amountBStr = amountArray[1];
     const liquidity = this._mintInner(tokenA, tokenB, amountAStr, amountBStr, toAddress, false);
 
-    return JSON.stringify([amountAStr, amountBStr, liquidity.toString()]);
+    return JSON.stringify([amountAStr, amountBStr, liquidity.toString(10)]);
   },
 
   addLiquidityNAS: function(token, amountTokenDesired, amountTokenMin, amountNASMin, toAddress) {
+    this._verifyAddress(toAddress);
+
     amountTokenDesired = new BigNumber(amountTokenDesired);
     amountTokenMin = new BigNumber(amountTokenMin);
     amountNASMin = new BigNumber(amountNASMin);
@@ -500,10 +529,14 @@ Swap.prototype = {
       Blockchain.transfer(toAddress, value.minus(amountNASStr));
     }
 
-    return JSON.stringify([amountTokenStr, amountNASStr, liquidity.toString()]);
+    return JSON.stringify([amountTokenStr, amountNASStr, liquidity.toString(10)]);
   },
 
   removeLiquidity: function (tokenA, tokenB, liquidity, amountAMin, amountBMin, toAddress) {
+    this._verifyAddress(tokenA);
+    this._verifyAddress(tokenB);
+    this._verifyAddress(toAddress);
+
     liquidity = new BigNumber(liquidity);
     amountAMin = new BigNumber(amountAMin);
     amountBMin = new BigNumber(amountBMin);
@@ -551,6 +584,10 @@ Swap.prototype = {
   },
 
   swapExactTokensForTokens: function (amountIn, amountOutMin, path, toAddress) {
+    this._verifyValue(amountIn);
+    this._verifyValue(amountOutMin);
+    this._verifyAddress(toAddress);
+
     if (typeof path === "string") {
       path = JSON.parse(path);
     }
@@ -567,6 +604,10 @@ Swap.prototype = {
   },
 
   swapTokensForExactTokens: function (amountOut, amountInMax, path, toAddress) {
+    this._verifyValue(amountOut);
+    this._verifyValue(amountInMax);
+    this._verifyAddress(toAddress);
+
     if (typeof path === "string") {
       path = JSON.parse(path);
     }
@@ -583,6 +624,9 @@ Swap.prototype = {
   },
 
   swapExactNASForTokens: function(amountOutMin, path, toAddress) {
+    this._verifyValue(amountOutMin);
+    this._verifyAddress(toAddress);
+
     if (typeof path === "string") {
       path = JSON.parse(path);
     }
@@ -606,6 +650,10 @@ Swap.prototype = {
   },
 
   swapTokensForExactNAS: function(amountOut, amountInMax, path, toAddress) {
+    this._verifyValue(amountOut);
+    this._verifyValue(amountInMax);
+    this._verifyAddress(toAddress);
+
     if (typeof path === "string") {
       path = JSON.parse(path);
     }
@@ -630,6 +678,10 @@ Swap.prototype = {
   },
 
   swapExactTokensForNAS: function(amountIn, amountOutMin, path, toAddress) {
+    this._verifyValue(amountIn);
+    this._verifyValue(amountOutMin);
+    this._verifyAddress(toAddress);
+
     if (typeof path === "string") {
       path = JSON.parse(path);
     }
@@ -654,6 +706,9 @@ Swap.prototype = {
   },
 
   swapNASForExactTokens: function(amountOut, path, toAddress) {
+    this._verifyValue(amountOut);
+    this._verifyAddress(toAddress);
+
     if (typeof path === "string") {
       path = JSON.parse(path);
     }
@@ -663,7 +718,7 @@ Swap.prototype = {
     }
 
     const amounts = this.getAmountsIn(amountOut, path);
-    if (amounts[0] < Blockchain.transaction.value) {
+    if (new BigNumber(amounts[0]).gt(Blockchain.transaction.value)) {
       throw 'Swap: EXCESSIVE_INPUT_AMOUNT';
     }
 
