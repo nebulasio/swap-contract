@@ -1,6 +1,7 @@
 /** Automatically generated code, please do not modify. */
 const FakeNAX = require('./contracts/FakeNAX/local.js')
 const LPToken = require('./contracts/LPToken/local.js')
+const MultiSig = require('./contracts/MultiSig/local.js')
 const NUSDT = require('./contracts/NUSDT/local.js')
 const NUSDTNASLPToken = require('./contracts/NUSDTNASLPToken/local.js')
 const NUSDTNAXLPToken = require('./contracts/NUSDTNAXLPToken/local.js')
@@ -18,6 +19,7 @@ const TestUtils = require('./utils.js')
 LocalContext.clearData()
 
 async function deploy() {
+    MultiSig._deploy([TestKeys.deployer.getAddressString(), TestKeys.caller.getAddressString()], 2)
     WNAS._deploy()
     NUSDT._deploy()
     FakeNAX._deploy()
@@ -208,6 +210,14 @@ async function testRemoveLiquidity() {
         TestKeys.caller.getAddressString())
 }
 
+async function testMultiSig() {
+    Swap.transferOwnership(LocalContext.getContractAddress(MultiSig))
+
+    MultiSig.addProposal(LocalContext.getContractAddress(Swap), '0', 'transferOwnership', [TestKeys.caller.getAddressString()])
+    MultiSig._setAccount(TestKeys.deployer).confirmProposal(0)
+    MultiSig.confirmProposal(0)
+}
+
 async function main() {
 
     LocalContext.transfer(null, TestKeys.caller.getAddressString(), TestUtils.nas('10000000'))
@@ -220,6 +230,7 @@ async function main() {
     await testAddLiquidity()
     await testSwap()
     await testRemoveLiquidity()
+    await testMultiSig()
 }
 
 main()

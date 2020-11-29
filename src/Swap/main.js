@@ -88,11 +88,22 @@ Swap.prototype = {
     this._allPairs = [];
   },
 
+  transferOwnership: function (owner) {
+    this._verifyPermission();
+    this._verifyAddress(owner);
+
+    this._owner = owner;
+  },
+
+  getOwner: function() {
+    return this._owner;
+  },
+
   _verifyPermission: function () {
     if (Blockchain.transaction.from != this._owner) {
         throw new Error("only owner has permission.");
     }
-},
+  },
 
   _verifyAddress: function (address) {
     if (Blockchain.verifyAddress(address) === 0) {
@@ -152,12 +163,23 @@ Swap.prototype = {
     return this._getPair(pairName);
   },
 
+  getPairByLp: function(lp) {
+    let pairs = this.allPairs();
+    for (let pairName of pairs) {
+      let pair = this._getPair(pairName);
+      if (pair.lp == lp) {
+        return pair;
+      }
+    }
+    throw new Error('pair not found.')
+  },
+
   allPairs: function () {
     return this._allPairs;
   },
 
   createPair: function (token0, token1, lp) {
-    this._verifyPermission()
+    this._verifyPermission();
     this._verifyAddress(token0);
     this._verifyAddress(token1);
     this._verifyAddress(token0);

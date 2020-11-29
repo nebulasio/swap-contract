@@ -3,6 +3,8 @@ const FakeNAX = require('./contracts/FakeNAX/online.js').testnet
 const FakeNAXMainnet = require('./contracts/FakeNAX/online.js').mainnet
 const LPToken = require('./contracts/LPToken/online.js').testnet
 const LPTokenMainnet = require('./contracts/LPToken/online.js').mainnet
+const MultiSig = require('./contracts/MultiSig/online.js').testnet
+const MultiSigMainnet = require('./contracts/MultiSig/online.js').mainnet
 const NUSDT = require('./contracts/NUSDT/online.js').testnet
 const NUSDTMainnet = require('./contracts/NUSDT/online.js').mainnet
 const NUSDTNASLPToken = require('./contracts/NUSDTNASLPToken/online.js').testnet
@@ -213,6 +215,25 @@ async function transferToken() {
     await FakeNAX.transfer('n1aNmaBsUoGpV9gQL2rciexKuWMF7cfeqWe', TestUtils.nax(10000))
 }
 
+async function testMultiSig() {
+    // await MultiSig._deploy(['n1MFYkKX28Urr1ByeERWK5vu6XgZDBHTLTV','n1U1U1xZa95gJbByUXKNQ3A6zswYtDxz2z6','n1FHjH2A4kzEBHGEth9Wi8uM1Rzjp3Aj5Fn','n1Q5GFCpjMPakGfx1m5CgcePrTRuTWu9yqj'], 2)
+    TestUtils.log('multisig', ConfigManager.getOnlineContractAddress(MultiSig))
+    TestUtils.log('owners', await MultiSig.getOwnersTest())
+    TestUtils.log('require', await MultiSig.getRequiredTest())
+    // await MultiSig.addProposal(null, '0','_addOwner',['n1aNmaBsUoGpV9gQL2rciexKuWMF7cfeqWe'])
+    // TestUtils.log('proposal count', await MultiSig.getProposalCountTest())
+    // await MultiSig.confirmProposal(0)
+    // await MultiSig._setAccount(TestKeys.deployer).confirmProposal(0)
+    // TestUtils.log('owners', await MultiSig.getOwnersTest())
+    // TestUtils.log('require', await MultiSig.getRequiredTest())
+    await MultiSig.addProposal(ConfigManager.getOnlineContractAddress(Swap), '0', 'transferOwnership', [TestKeys.deployer.getAddressString()])
+    let count = await MultiSig.getProposalCountTest()
+    TestUtils.log('proposal count', count)
+    await MultiSig.confirmProposal(count-1)
+    await MultiSig._setAccount(TestKeys.deployer).confirmProposal(count-1)
+    TestUtils.log('owner', await Swap.getOwnerTest())
+}
+
 async function main() {
     TestUtils.log("deployer", TestKeys.deployer.getAddressString())
     TestUtils.log("caller", TestKeys.caller.getAddressString())
@@ -222,6 +243,12 @@ async function main() {
 
     // await deploy()
     //old nax n1mMUcxeDY6TWzyiTLFFUAQAb4bXUrYtvFb
+
+    TestUtils.log('owner', await Swap.getOwnerTest())
+    await Swap.transferOwnership(ConfigManager.getOnlineContractAddress(MultiSig))
+    TestUtils.log('owner', await Swap.getOwnerTest())
+    await testMultiSig()
+    return
 
     let addrs = {
         WNAS: ConfigManager.getOnlineContractAddress(WNAS),
@@ -233,20 +260,21 @@ async function main() {
         nUSDTNAXLPToken: ConfigManager.getOnlineContractAddress(NUSDTNAXLPToken)
     }
     TestUtils.log("swap addrs", addrs)
+    TestUtils.log("swap pair", await Swap.getPairTest(ConfigManager.getOnlineContractAddress(NUSDT), ConfigManager.getOnlineContractAddress(FakeNAX)))
     // await NUSDT.transfer("n1dHKZTnMA2hmocLD35UfqG6kwDQ3Uq92nS", TestUtils.usdt("1000"))
     // await FakeNAX.transfer("n1dHKZTnMA2hmocLD35UfqG6kwDQ3Uq92nS", TestUtils.nax("1000"))
 
-    // let inAmount = await Swap.getAmountsInTest(TestUtils.nax(100), [ConfigManager.getOnlineContractAddress(WNAS), ConfigManager.getOnlineContractAddress(FakeNAX)])
+    // let inAmount = await Swap.getAmountsInTest(TestUtils.usdt(1), [ConfigManager.getOnlineContractAddress(WNAS), ConfigManager.getOnlineContractAddress(NUSDT)])
     // TestUtils.log('nas-nax amountsIn', inAmount)
 
     // await testWNAS()
-    await testPair()
-    await testAddLiquidity()
+    // await testPair()
+    // await testAddLiquidity()
     // await testSwap()
     // await testRemoveLiquidity()
 
-    TestUtils.log("nax balance", await FakeNAX.balanceOfTest(TestKeys.caller.getAddressString()))
-    TestUtils.log("nUSDT balance", await NUSDT.balanceOfTest(TestKeys.caller.getAddressString()))
+    // TestUtils.log("nax balance", await FakeNAX.balanceOfTest(TestKeys.caller.getAddressString()))
+    // TestUtils.log("nUSDT balance", await NUSDT.balanceOfTest(TestKeys.caller.getAddressString()))
 }
 
 main()
